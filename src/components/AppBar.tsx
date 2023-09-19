@@ -11,7 +11,7 @@ const AppBar = (props: Props) => {
             Home Page
         </Link>
 
-        <Link className="transition-colors hover:text-blue-500" href={'/dashboard'}>
+        <Link className="transition-colors hover:text-blue-500" href={'/main/reorder-tool'}>
            DashBoard
         </Link>
         <SignInButton />
