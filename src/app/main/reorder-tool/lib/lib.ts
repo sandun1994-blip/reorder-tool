@@ -126,7 +126,8 @@ export const getStockOrder = (item: any[]) => {
       supplierCode: e.supplierCode,
       fromLoc: e.centralLocation,
       workOrder: processWorkorder(e),
-      nameArray:addSupNames(e)
+      nameArray:addSupNames(e),
+      isExpand:e.stockItem.billomatHdr?true:false
     };
   });
 

@@ -3,7 +3,7 @@
 
 import { FcHighPriority } from "react-icons/fc";
 import { RowData, createColumnHelper } from "@tanstack/react-table";
-import React, { useState } from "react";
+import React, { HTMLProps, useEffect, useState } from "react";
 import ReactSelect from "react-select";
 
 declare module "@tanstack/react-table" {
@@ -11,6 +11,7 @@ declare module "@tanstack/react-table" {
     updateData: (rowIndex: number, columnId: string, value: unknown) => void;
   }
 }
+
 
 const columnHelper = createColumnHelper<any>();
 
@@ -26,24 +27,41 @@ export const columns = [
   }),
   columnHelper.accessor((row) => row.name, {
     id: "name",
+    // enableSorting:false,
     cell: ({ getValue, row, column: { id }, table }) => {
       const initialValue = getValue();
       // We need to keep and update the state of the cell normally
-      const [value, setValue] = useState<{
+      const [option, setOption] = useState<{
         value: string;
         label: string;
       } | null>({
         value: initialValue,
         label: initialValue,
       });
+      const [value, setValue] = useState(initialValue);
+
+      const [selectedOption, setSelectedOption] = useState('');
+
+      // Handle the change event when an option is selected
+      // const handleSelectChange = (event) => {
+      //   setSelectedOption(event.target.value);
+      //   table.options.meta?.updateData(row.index, id, event.target.value);
+      // };
 
       // When the input is blurred, we'll call our table meta's updateData function
-      const onBlur = () => {};
+      const onBlur = () => {
+        table.options.meta?.updateData(row.index, id, option?.value)
+      };
 
       // If the initialValue is changed external, sync it up with our state
       React.useEffect(() => {
-        table.options.meta?.updateData(row.index, id, value?.value);
-      }, [value]);
+        setValue(initialValue);
+      }, [initialValue]);
+
+    //  console.log('updated');
+     const handle=(val :any)=>{
+      table.options.meta?.updateData(row.index, id, val?.value as string)
+     }
 
       const options =
         row.original.nameArray &&
@@ -52,19 +70,21 @@ export const columns = [
           label: data,
         }));
       return (
-        // <input
-        //   value={value as string}
-        //   onChange={e => setValue(e.target.value)}
-        //   onBlur={onBlur}
-        // />
-
         <>
           <div style={{ width: "200px" }}>
+
+          {/* <select id="mySelect" value={selectedOption} onChange={handleSelectChange}>
+        <option value="">Select...</option>
+        <option value="option1">Option 1</option>
+        <option value="option2">Option 2</option>
+        <option value="option3">Option 3</option>
+      </select> */}
             <ReactSelect
               id={row.id}
-              defaultValue={value}
-              onChange={setValue}
+              defaultValue={option}
+              onChange={handle}
               options={options}
+              
             />
           </div>
         </>
@@ -76,14 +96,32 @@ export const columns = [
   columnHelper.accessor("onHandQty", {
     header: () => "",
     cell: (info) => {
-// console.log(info.row.original.fromLoc);
+      // console.log(info.row.original.fromLoc);
 
-      return<>{info.row.original.fromLoc>0?<button>qty</button>:''}</> 
+      return <>{info.row.original.fromLoc > 0 ? <button>qty</button> : ""}</>;
     },
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("stockCode", {
     header: () => <span>Stockcode</span>,
+    footer: (info) => info.column.id,
+  }),
+  columnHelper.accessor("expander", {
+    header: () => "",
+    cell: ({ row }) => {
+      return row.original.isExpand ? (
+        <button
+          {...{
+            onClick: row.getToggleExpandedHandler(),
+            style: { cursor: "pointer" },
+          }}
+        >
+          {row.getIsExpanded() ? "👇" : "👉"}
+        </button>
+      ) : (
+        ""
+      );
+    },
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("description", {
@@ -134,8 +172,8 @@ export const columns = [
     header: "Incoming",
     footer: (info) => info.column.id,
   }),
-  columnHelper.accessor("For Sales", {
-    header: "salesOrdQTY",
+  columnHelper.accessor("salesOrdQTY", {
+    header: "For Sales ",
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("minStock", {
@@ -148,6 +186,31 @@ export const columns = [
   }),
   columnHelper.accessor("calcReOrd", {
     header: "Reord Qty",
+    cell: ({ getValue, row: { index }, column: { id }, table }) => {
+      const initialValue = getValue();
+      // We need to keep and update the state of the cell normally
+      const [value, setValue] = React.useState(initialValue);
+
+      // When the input is blurred, we'll call our table meta's updateData function
+      const onBlur = () => {
+        table.options.meta?.updateData(index, id, value);
+      };
+
+      // If the initialValue is changed external, sync it up with our state
+      React.useEffect(() => {
+        setValue(initialValue);
+      }, [initialValue]);
+
+      return (
+        <input
+          value={value as number}
+          onChange={(e) => setValue(+e.target.value)}
+          onBlur={onBlur}
+          type="number"
+          className="w-16 text-end"
+        />
+      );
+    },
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("pause", {
@@ -155,7 +218,50 @@ export const columns = [
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("select", {
-    header: "All",
+    header: ({ table }) => (
+      <IndeterminateCheckbox
+        {...{
+          checked: table.getIsAllRowsSelected(),
+          indeterminate: table.getIsSomeRowsSelected(),
+          onChange: table.getToggleAllRowsSelectedHandler(),
+        }}
+      />
+    ),
+    cell: ({ row }) => (
+      <div className="px-1">
+        <IndeterminateCheckbox
+          {...{
+            checked: row.getIsSelected(),
+            disabled: !row.getCanSelect(),
+            indeterminate: row.getIsSomeSelected(),
+            onChange: row.getToggleSelectedHandler(),
+          }}
+        />
+      </div>
+    ),
     footer: (info) => info.column.id,
   }),
 ];
+
+function IndeterminateCheckbox({
+  indeterminate,
+  className = "",
+  ...rest
+}: { indeterminate?: boolean } & HTMLProps<HTMLInputElement>) {
+  const ref = React.useRef<HTMLInputElement>(null!);
+
+  React.useEffect(() => {
+    if (typeof indeterminate === "boolean") {
+      ref.current.indeterminate = !rest.checked && indeterminate;
+    }
+  }, [ref, indeterminate]);
+
+  return (
+    <input
+      type="checkbox"
+      ref={ref}
+      className={className + " cursor-pointer"}
+      {...rest}
+    />
+  );
+}
