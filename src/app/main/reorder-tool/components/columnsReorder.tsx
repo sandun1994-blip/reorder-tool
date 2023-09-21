@@ -130,6 +130,8 @@ export const columns = [
   }),
   columnHelper.accessor("branchName", {
     header: "Location",
+   
+
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("sales6", {

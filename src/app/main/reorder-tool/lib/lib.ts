@@ -1,3 +1,6 @@
+import { RowData, Row, FilterMeta, TransformFilterValueFn, ColumnFilterAutoRemoveTestFn } from "@tanstack/react-table";
+import Fuse from "fuse.js";
+
 export const getLocations = (items: any[]) => {
   const locations: string[] = [];
   let location: string = "";
@@ -134,5 +137,43 @@ export const getStockOrder = (item: any[]) => {
   return stockOrder;
 };
 
+export interface FilterFn<TData extends RowData> {
+  (row: Row<TData>, columnId: string, filterValue: any, addMeta: (meta: FilterMeta) => void): boolean;
+  resolveFilterValue?: TransformFilterValueFn<TData>;
+  autoRemove?: ColumnFilterAutoRemoveTestFn<TData>;
+}
 
+let i=0
+export const fuseFilterFn: FilterFn<any> = (
+  row,
+  columnId,
+  filterValue,
+  addMeta,
+) => {
+ // console.log(row.getValue('branchName'));
+  i++
+  const searchPattern = filterValue;
+
+  // Create a new Fuse instance with an array containing the value in the specified column (row.getValue(columnId))
+ // const fuse = new Fuse([row.getValue(columnId)]);
+
+  // Perform a fuzzy search on the value in the specified column with the searchPattern
+ // const searchResults = fuse.search(searchPattern);
+ // console.log(row.getValue('branchName'));
+  
+console.log(('branchName'));
+
+const con =filterValue.includes(row.getValue('branchName'))
+
+  if (con) {
+;
+    // If any search result is found, consider the row as a match
+    // Optionally, add any metadata for the search results
+   addMeta(con);
+    return true; // Return true to indicate that the row matches the filter
+  }
+
+ // If no search results are found, return false to indicate that the row doesn't match the filter
+ return false;
+};
 
