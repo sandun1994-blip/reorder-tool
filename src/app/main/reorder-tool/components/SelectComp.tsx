@@ -22,9 +22,9 @@ const SelectComp = ({
   };
 
   return (
-    <div style={{ width: "600px" }} className="m-2">
+    <div style={{ width: "300px" }} className="ml-2">
       <ReactSelect
-        id={"react-select-2-live-region"}
+        id={id}
         defaultValue={options}
         onChange={onChange}
         options={optionArray}

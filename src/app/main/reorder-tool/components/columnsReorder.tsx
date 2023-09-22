@@ -2,16 +2,16 @@
 "use client";
 
 import { FcHighPriority } from "react-icons/fc";
-import { RowData, createColumnHelper } from "@tanstack/react-table";
+import { ColumnDef, RowData, createColumnHelper } from "@tanstack/react-table";
 import React, { HTMLProps, useEffect, useState } from "react";
 import ReactSelect from "react-select";
+import { Checkbox } from "@/components/ui/checkbox";
 
-declare module "@tanstack/react-table" {
-  interface TableMeta<TData extends RowData> {
-    updateData: (rowIndex: number, columnId: string, value: unknown) => void;
-  }
-}
-
+// declare module "@tanstack/react-table" {
+// //   interface TableMeta<TData extends RowData> {
+// //     updateData: (rowIndex: number, columnId: string, value: unknown) => void;
+// //   }
+// // }
 
 const columnHelper = createColumnHelper<any>();
 
@@ -40,7 +40,7 @@ export const columns = [
       });
       const [value, setValue] = useState(initialValue);
 
-      const [selectedOption, setSelectedOption] = useState('');
+      const [selectedOption, setSelectedOption] = useState("");
 
       // Handle the change event when an option is selected
       // const handleSelectChange = (event) => {
@@ -50,7 +50,7 @@ export const columns = [
 
       // When the input is blurred, we'll call our table meta's updateData function
       const onBlur = () => {
-        table.options.meta?.updateData(row.index, id, option?.value)
+        table.options.meta?.updateData(row.index, id, option?.value);
       };
 
       // If the initialValue is changed external, sync it up with our state
@@ -58,10 +58,10 @@ export const columns = [
         setValue(initialValue);
       }, [initialValue]);
 
-    //  console.log('updated');
-     const handle=(val :any)=>{
-      table.options.meta?.updateData(row.index, id, val?.value as string)
-     }
+      //  console.log('updated');
+      const handle = (val: any) => {
+        table.options.meta?.updateData(row.index, id, val?.value as string);
+      };
 
       const options =
         row.original.nameArray &&
@@ -72,8 +72,7 @@ export const columns = [
       return (
         <>
           <div style={{ width: "200px" }}>
-
-          {/* <select id="mySelect" value={selectedOption} onChange={handleSelectChange}>
+            {/* <select id="mySelect" value={selectedOption} onChange={handleSelectChange}>
         <option value="">Select...</option>
         <option value="option1">Option 1</option>
         <option value="option2">Option 2</option>
@@ -84,7 +83,6 @@ export const columns = [
               defaultValue={option}
               onChange={handle}
               options={options}
-              
             />
           </div>
         </>
@@ -130,7 +128,6 @@ export const columns = [
   }),
   columnHelper.accessor("branchName", {
     header: "Location",
-   
 
     footer: (info) => info.column.id,
   }),
@@ -220,50 +217,26 @@ export const columns = [
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("select", {
-    header: ({ table }) => (
-      <IndeterminateCheckbox
-        {...{
-          checked: table.getIsAllRowsSelected(),
-          indeterminate: table.getIsSomeRowsSelected(),
-          onChange: table.getToggleAllRowsSelectedHandler(),
-        }}
-      />
-    ),
-    cell: ({ row }) => (
-      <div className="px-1">
-        <IndeterminateCheckbox
-          {...{
-            checked: row.getIsSelected(),
-            disabled: !row.getCanSelect(),
-            indeterminate: row.getIsSomeSelected(),
-            onChange: row.getToggleSelectedHandler(),
+    header: ({ table }) => {
+      return (
+        <Checkbox className="mr-2"
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => {
+            table.toggleAllPageRowsSelected(!!value);
           }}
         />
-      </div>
+      );
+    },
+    enableSorting: false,
+    cell: ({ row }) => (
+      <Checkbox className="mr-2"
+      checked={row.getIsSelected()}
+      onCheckedChange={(value) => {
+        row.toggleSelected(!!value);
+      }}
+    />
     ),
     footer: (info) => info.column.id,
   }),
 ];
 
-function IndeterminateCheckbox({
-  indeterminate,
-  className = "",
-  ...rest
-}: { indeterminate?: boolean } & HTMLProps<HTMLInputElement>) {
-  const ref = React.useRef<HTMLInputElement>(null!);
-
-  React.useEffect(() => {
-    if (typeof indeterminate === "boolean") {
-      ref.current.indeterminate = !rest.checked && indeterminate;
-    }
-  }, [ref, indeterminate]);
-
-  return (
-    <input
-      type="checkbox"
-      ref={ref}
-      className={className + " cursor-pointer"}
-      {...rest}
-    />
-  );
-}

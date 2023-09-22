@@ -1,8 +1,13 @@
-import Providers from '@/components/Providers'
+
+
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import AppBar from '@/components/AppBar'
+
+import Providers from '@/components/Providers';
+import { ThemeProvider } from '@/components/theme-provider';
+
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,12 +23,26 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      
       <Providers>
      
-      <body className={inter.className}>
-      <AppBar/>
-        {children}</body>
-      </Providers>    
+        <body className={inter.className}>
+        
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            
+          ><AppBar/>
+            {children}
+          </ThemeProvider>
+          
+          
+          </body>
+        
+      </Providers>  
+    
+     
     </html>
   )
 }

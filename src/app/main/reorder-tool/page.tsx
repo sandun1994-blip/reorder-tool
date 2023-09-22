@@ -15,22 +15,37 @@ import {
   getFacetedRowModel,
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
+  RowData,
+  TableOptions,
+  VisibilityState,
 } from "@tanstack/react-table";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { columns } from "./components/columnsReorder";
-import "./table.css";
 import { useSession } from "next-auth/react";
 import axios from "axios";
-
-import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils";
 import SelectComp from "./components/SelectComp";
 import { getLocations, getStockOrder } from "./lib/lib";
+import { Button } from "@/components/Button";
+import ReorderDataTable from "./components/data-table";
+import { Input } from "@/components/ui/input";
 
-//declare module "@tanstack/table-core" {
-//   interface FilterFns {
-//     globalFns: FilterFn<unknown>;
-//   }
-// }
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { downloadToExcel } from "./lib/xlsx";
+
+declare module "@tanstack/table-core" {
+  interface TableMeta<TData extends RowData> {
+    editedRows: any;
+    updateData: (rowIndex: any, columnId: any, value: any) => void;
+    setEditedRows: any;
+    addRow: any;
+  }
+}
 
 // function testFalsey(val: any) {
 //   return val === undefined || val === null || val === "";
@@ -83,24 +98,23 @@ const ReorderTool = (props: Props) => {
     columnId: string,
     filterValue: any
   ) => {
-    if (options.length > 0 || optionsTwo.length > 0 ) {
+    if (options.length > 0 || optionsTwo.length > 0) {
       if (columnId === "name") {
         return false;
       }
       return filterValue.includes("ALL")
         ? true
-        : (filterValue?.includes(row.getValue<unknown[]>(columnId)) );
-    } 
-    // else {
-    //   const search = filterValue.toLowerCase();
-    //   return Boolean(
-    //     row
-    //       .getValue<string | null>(columnId)
-    //       ?.toString()
-    //       ?.toLowerCase()
-    //       ?.includes(search)
-    //   );
-    // }
+        : filterValue?.includes(row.getValue<unknown[]>(columnId));
+    } else {
+      const search = filterValue.toLowerCase();
+      return Boolean(
+        row
+          .getValue<string | null>(columnId)
+          ?.toString()
+          ?.toLowerCase()
+          ?.includes(search)
+      );
+    }
   };
 
   // globalFns.resolveFilterValue = (val: any) => {
@@ -122,11 +136,12 @@ const ReorderTool = (props: Props) => {
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState("");
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [options, setOptions] = useState<any[]>([]);
   const [optionsTwo, setOptionsTwo] = useState<any[]>([]);
-
+  const [editedRows, setEditedRows] = useState({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
     [arrayOfLocations]
@@ -136,17 +151,12 @@ const ReorderTool = (props: Props) => {
     return columns;
   }, []);
 
-
   useEffect(() => {
-   
-      table.getAllColumns().filter((col) => col.id === 'stockCode')[0].setFilterValue(searchValue);
-    
-  }, [ searchValue]);
+    //    table.getAllColumns().filter((col) => col.id === 'stockCode')[0].setFilterValue(searchValue);
+    //console.log(table.getGlobalAutoFilterFn());
 
-
-
-
-
+    setGlobalFilter(searchValue);
+  }, [searchValue]);
 
   useEffect(() => {
     const getData = async () => {
@@ -178,6 +188,7 @@ const ReorderTool = (props: Props) => {
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     autoResetPageIndex,
     filterFns: {
       globalFns,
@@ -187,6 +198,7 @@ const ReorderTool = (props: Props) => {
       sorting,
       globalFilter,
       columnFilters,
+      columnVisibility,
     },
     enableRowSelection: true, //enable row selection for all rows
     // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
@@ -202,43 +214,38 @@ const ReorderTool = (props: Props) => {
     // globalFilterFn: globalFnsTwo,
     globalFilterFn: globalFns,
     meta: {
+      editedRows,
+      setEditedRows,
       updateData: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
-        setData((old) => {
-          const oldData = old.map((row, index) => {
+        setData((old) =>
+          old.map((row, index) => {
             if (index === rowIndex) {
-              setTempData((pre) =>
-                pre.map((data) => {
-                  if (data.id === row.id) {
-                    return { ...data, [columnId]: value };
-                  }
-                  return data;
-                })
-              );
               return {
-                ...old[rowIndex]!,
+                ...old[rowIndex],
                 [columnId]: value,
               };
             }
-
             return row;
-          });
-
-          return oldData;
-        });
+          })
+        );
+      },
+      addRow: () => {
+        const newRow: any = {
+          studentId: Math.floor(Math.random() * 10000),
+          name: "",
+          dateOfBirth: "",
+          major: "",
+        };
+        const setFunc = (old: any[]) => [...old, newRow];
+        setData(setFunc);
+        // setOriginalData(setFunc);
       },
     },
   });
   //  console.log("render",tempData.filter(d=>d.select));
   //  console.log("render",data.filter(d=>d.select));
-
-  const handleInputChange = (e: any) => {
-    setSearchValue(e.target.value);
-  };
-  const selectRowCount = useMemo(() => {
-    return data.filter((item) => item.select).length;
-  }, [data]);
 
   useEffect(() => {
     const locations = options.map((loc) => loc.value);
@@ -252,10 +259,12 @@ const ReorderTool = (props: Props) => {
     //   setData(tempData);
 
     // }
-    if (locations.length > 0 || locationsTwo.length > 0 ) {
+    if (locations.length > 0 || locationsTwo.length > 0) {
       console.log("location");
 
-      setGlobalFilter(JSON.stringify([...locations, ...locationsTwo]));
+      setGlobalFilter(
+        JSON.stringify([...locations, ...locationsTwo, searchValue])
+      );
     } else {
       setGlobalFilter("");
     }
@@ -265,112 +274,72 @@ const ReorderTool = (props: Props) => {
   }, [options, optionsTwo]);
 
   return (
-    <div className="p-10 flex-col">
-      
-        <input
+    <div className="pr-5 pl-5 py-5 ">
+      <div className="flex justify-between items-center p-5">
+        <div> <Input
           type="text"
-          className="text-black border m-2"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-        />
-      
-
-      {/* <input
-        type="text"
-        className="text-black border m-2"
-        value={searchValue}
-        onChange={handleInputChange}
-      /> */}
-      <div className="flex justify-center items-center">
-
-     
-        <SelectComp
+          className="max-w-sm"
+        /></div>
+        <div className=""> <SelectComp
           id={"loc-filter"}
           options={options}
           setOptions={setOptions}
           optionArray={optionsArray}
           setGlobalFilter={setGlobalFilter}
-        />
-
+        /></div>
+        <div className=" ml-3"> 
         <SelectComp
-          id={"loc-filter"}
+          id={"loc-filter-2"}
           options={optionsTwo}
           setOptions={setOptionsTwo}
           optionArray={optionsArray}
           setGlobalFilter={setGlobalFilter}
-        />
-      </div>
-
-      <table>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
+        /></div>
+        <div></div>
+        <div><Button onClick={() => downloadToExcel(data)}>Download</Button></div>
+        <div><DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="text-gray-900 hover:text-white border border-gray-800 hover:bg-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-2 py-2 text-center  dark:border-gray-600 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-800">
+              Open
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanHide())
+              .map((column) => {
                 return (
-                  <th key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder ? null : (
-                      <>
-                        <div
-                          {...{
-                            className: header.column.getCanSort()
-                              ? "cursor-pointer select-none"
-                              : "",
-                            onClick: header.column.getToggleSortingHandler(),
-                          }}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {{
-                            asc: " 🔼",
-                            desc: " 🔽",
-                          }[header.column.getIsSorted() as string] ?? null}
-                        </div>
-                      </>
-                    )}
-                  </th>
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value: boolean) => {
+                      console.log(value);
+
+                      column.toggleVisibility(!!value);
+                    }}
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
                 );
               })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <Fragment key={row.id}>
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="text-center text-xs ">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-              {row.getIsExpanded() && (
-                <tr>
-                  {/* 2nd row is a custom 1 cell row */}
-                  <td colSpan={row.getVisibleCells().length}>hell</td>
-                </tr>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-        <tfoot>
-          {table.getFooterGroups().map((footerGroup) => (
-            <tr key={footerGroup.id}>
-              {footerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.footer,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </tfoot>
-      </table>
+          </DropdownMenuContent>
+        </DropdownMenu></div>
+       
+        
+       
+
+       
+        <ThemeToggle className="ml-4" />
+
+        
+      </div>
+      <div className=" p-1">
+        <ReorderDataTable useTable={table} data={data} columns={columns} />
+      </div>
+
       <div className="h-4" />
 
       <div className="flex items-center gap-2">
@@ -434,8 +403,10 @@ const ReorderTool = (props: Props) => {
           ))}
         </select>
       </div>
-      <div>{table.getRowModel().rows.length} Rows</div>
-      <div>{selectRowCount} selected Rows</div>
+      <div className="flex-1 text-sm text-muted-foreground">
+        {table.getFilteredSelectedRowModel().rows.length} of{" "}
+        {table.getFilteredRowModel().rows.length} row(s) selected
+      </div>
     </div>
   );
 };
