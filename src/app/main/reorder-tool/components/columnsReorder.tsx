@@ -2,16 +2,27 @@
 "use client";
 
 import { FcHighPriority } from "react-icons/fc";
-import { ColumnDef, RowData, createColumnHelper } from "@tanstack/react-table";
+import {
+  Column,
+  ColumnDef,
+  RowData,
+  Table,
+  createColumnHelper,
+} from "@tanstack/react-table";
 import React, { HTMLProps, useEffect, useState } from "react";
 import ReactSelect from "react-select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { MdFilterList, MdFilterListOff } from "react-icons/md";
+import { Button } from "@/components/ui/button";
 
-// declare module "@tanstack/react-table" {
-// //   interface TableMeta<TData extends RowData> {
-// //     updateData: (rowIndex: number, columnId: string, value: unknown) => void;
-// //   }
-// // }
+declare module "@tanstack/react-table" {
+  //   interface TableMeta<TData extends RowData> {
+  //     updateData: (rowIndex: number, columnId: string, value: unknown) => void;
+  //   }
+  interface ColumnMeta<TData extends unknown, TValue> {
+    filterVisible: any;
+  }
+}
 
 const columnHelper = createColumnHelper<any>();
 
@@ -23,11 +34,14 @@ export const columns = [
         {info.getValue() ? <FcHighPriority size={25} /> : " "}
       </div>
     ),
+    enableColumnFilter: false,
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor((row) => row.name, {
     id: "name",
-    // enableSorting:false,
+    meta: {
+      filterVisible: true,
+    },
     cell: ({ getValue, row, column: { id }, table }) => {
       const initialValue = getValue();
       // We need to keep and update the state of the cell normally
@@ -93,19 +107,38 @@ export const columns = [
   }),
   columnHelper.accessor("onHandQty", {
     header: () => "",
-    cell: (info) => {
+    enableColumnFilter: false,
+    cell: ({ getValue, row: { index, original }, column: { id }, table }) => {
       // console.log(info.row.original.fromLoc);
+      const handleClick = () => {
+        table.options.meta?.setwareHouseData(original);
+        table.options.meta?.setChartModal(true);
+      };
 
-      return <>{info.row.original.fromLoc > 0 ? <button>qty</button> : ""}</>;
+      return (
+        <>
+          {original.fromLoc > 0 ? (
+            <Button variant={"outline"} size={"sm"} onClick={handleClick}>
+              QTY
+            </Button>
+          ) : (
+            ""
+          )}
+        </>
+      );
     },
-    footer: (info) => info.column.id,
+    footer: (id) => id,
   }),
   columnHelper.accessor("stockCode", {
     header: () => <span>Stockcode</span>,
     footer: (info) => info.column.id,
+    meta: {
+      filterVisible: true,
+    },
   }),
   columnHelper.accessor("expander", {
     header: () => "",
+    enableColumnFilter: false,
     cell: ({ row }) => {
       return row.original.isExpand ? (
         <button
@@ -124,11 +157,14 @@ export const columns = [
   }),
   columnHelper.accessor("description", {
     header: "Description",
+    enableColumnFilter: false,
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("branchName", {
     header: "Location",
-
+    meta: {
+      filterVisible: true,
+    },
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("sales6", {
@@ -206,7 +242,8 @@ export const columns = [
           onChange={(e) => setValue(+e.target.value)}
           onBlur={onBlur}
           type="number"
-          className="w-16 text-end"
+          className=" text-end  rounded-md  dark:text-black border bg-green-50  border-green-500 focus:outline-none focus:border-red-500 p-1"
+          style={{ maxWidth: "50px" }}
         />
       );
     },
@@ -214,12 +251,14 @@ export const columns = [
   }),
   columnHelper.accessor("pause", {
     header: "Pause",
+    enableColumnFilter: false,
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("select", {
     header: ({ table }) => {
       return (
-        <Checkbox className="mr-2"
+        <Checkbox
+          className="mr-2"
           checked={table.getIsAllPageRowsSelected()}
           onCheckedChange={(value) => {
             table.toggleAllPageRowsSelected(!!value);
@@ -228,15 +267,16 @@ export const columns = [
       );
     },
     enableSorting: false,
+    enableColumnFilter: false,
     cell: ({ row }) => (
-      <Checkbox className="mr-2"
-      checked={row.getIsSelected()}
-      onCheckedChange={(value) => {
-        row.toggleSelected(!!value);
-      }}
-    />
+      <Checkbox
+        className="mr-2"
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => {
+          row.toggleSelected(!!value);
+        }}
+      />
     ),
     footer: (info) => info.column.id,
   }),
 ];
-
