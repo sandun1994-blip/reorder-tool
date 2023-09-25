@@ -22,7 +22,8 @@ import axios from "axios";
 import { Hourglass } from  'react-loader-spinner'
 
 import React, { useEffect, useState } from "react";
-import { getStockOrder, getLocations } from "../lib/lib";
+import { getStockOrder, getLocations, getWareHouseData } from "../lib/lib";
+import { LineChartCom } from "./LineChartCom";
 
 type Props = {
   setChartModal: any;
@@ -47,9 +48,9 @@ const WarehouseComp = ({ setChartModal, chartModal, details }: Props) => {
       };
       try {
         const res = await axios(config);
-        console.log(res.data,'ssssss');
+      
         
-        setData(res.data);
+        setData(getWareHouseData(res?.data));
         setLoading(false);
       } catch (error) {
         console.log(error);
@@ -62,24 +63,25 @@ const WarehouseComp = ({ setChartModal, chartModal, details }: Props) => {
 
   }, [details.stockCode]);
 
- 
+
+
 
   return (
-    <div>
-      <Dialog onOpenChange={setChartModal} open={chartModal}>
+    <div >
+      <Dialog onOpenChange={setChartModal} open={chartModal} >
         <DialogContent
           className={
-            " overflow-y-scroll max-h-screen mt-10 border border-green-500   max-w-fit"
+            " overflow-y-scroll max-h-screen mt-10 border border-gray-500   max-w-fit "
           }
         >
-          <DialogHeader>
-            <DialogTitle>Add Trainee</DialogTitle>
+          <DialogHeader >
+            <DialogTitle>{details?.locationName}</DialogTitle>
             <DialogDescription>
-              Add the email of your trainee.
+              {details.stockCode}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4 p-5 border border-green-500">
+          <div className="grid gap-4 py-4 p-5 ">
             {loading ? (
               <Hourglass
                 visible={true}
@@ -92,23 +94,23 @@ const WarehouseComp = ({ setChartModal, chartModal, details }: Props) => {
               />
             ) : (
               <div className=" items-center gap-4 border ">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
+                <Table >
+                  <TableHeader className="border border-gray-500">
+                    <TableRow className="border border-gray-500">
                       <TableHead>WAREHOUSES</TableHead>
                       <TableHead>SOH</TableHead>
-                      <TableHead>WAREINCOMINGHOUSES</TableHead>
-                      <TableHead>ANALASIS</TableHead>
+                      <TableHead>INCOMING</TableHead>
+                      <TableHead className="text-center">ANALASIS</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {[1, 2, 3, 4, 5].map((a) => (
-                      <TableRow key={a} className="p-20 ">
-                        <TableCell >WAREHOOOOOOOOOOOOOO</TableCell>
-                        <TableCell >WAREHOOOOOOOOOOOOOO</TableCell>
-                        <TableCell >WAREHOOOOOOOOOOOOOO</TableCell>
+                  <TableBody className="border border-gray-500">
+                    {data?.map((item:any,i) => (
+                      <TableRow key={i} className="p-20 ">
+                        <TableCell >{item?.stockLocation?.lName}</TableCell>
+                        <TableCell >{item?.inStockQTY}</TableCell>
+                        <TableCell >{item?.incommingty}</TableCell>
                         <TableCell >
-                          WAREHOOOOOOOOOOOOOOFFFFFFFFFFFFFF
+                          <LineChartCom chartdata={item?.chartData}/>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -119,7 +121,7 @@ const WarehouseComp = ({ setChartModal, chartModal, details }: Props) => {
           </div>
 
           <DialogFooter>
-            <DialogClose className="border p-2 rounded-md hover:border-red-600 border-green-600">
+            <DialogClose className="border p-2 rounded-md hover:border-red-600 border-gray-600 mb-10">
               CLOSE
             </DialogClose>
           </DialogFooter>

@@ -1,5 +1,10 @@
-import { RowData, Row, FilterMeta, TransformFilterValueFn, ColumnFilterAutoRemoveTestFn } from "@tanstack/react-table";
-import Fuse from "fuse.js";
+import {
+  RowData,
+  Row,
+  FilterMeta,
+  TransformFilterValueFn,
+  ColumnFilterAutoRemoveTestFn,
+} from "@tanstack/react-table";
 
 export const getLocations = (items: any[]) => {
   const locations: string[] = [];
@@ -34,7 +39,7 @@ export const palletQty = (data: any) => {
 
 export const processWorkorder = (data: any) => {
   if (
-    data.stockItem.billomatHdr?.workOrder.filter((a:any) => {
+    data.stockItem.billomatHdr?.workOrder.filter((a: any) => {
       return a.orderStatus === 1 || a.orderStatus === 0;
     }).length > 0
   ) {
@@ -44,59 +49,55 @@ export const processWorkorder = (data: any) => {
   return true;
 };
 
-
-const addSupNames=(data:any)=> {
-    const name :string[] = []
-const dataArry=data.stockItem?.supplierStockItems
-    if (
-        dataArry.length>0
-    ) {
-     
-        dataArry.forEach((item:any) => {
-         
-          if (!name.includes(item.supplierAccount.name)) {
-            name.push(item.supplierAccount.name)
-          }
-          if (item.tempLoc) {
-            name.push(item.tempLoc)
-          }
-        })
-    } 
-    // else {
-    //   name = this.supNames
-    // }
-
-    if (!name.includes(data.supplierName)) {
-      name.push(data.supplierName)
-    }
-
-    if (!name.includes('MALAGA WAREHOUSE') && data.centralLocation > 0) {
-      name.push('MALAGA WAREHOUSE')
-    }
-
-    if (!name.includes('GYMPIE WAREHOUSE') && data.centralLocation > 0) {
-      name.push('GYMPIE WAREHOUSE')
-    }
-
-    if (!name.includes('KALGOORLIE WAREHOUSE') && data.centralLocation > 0) {
-      name.push('KALGOORLIE WAREHOUSE')
-    }
-
-    return name
+const addSupNames = (data: any,supData:any) => {
+  let name: {label:string ,value:number}[] = [];
+  const dataArry = data.stockItem?.supplierStockItems;
+  if (dataArry.length > 0) {
+    dataArry.forEach((item: any) => {
+      if (!name.map(acc=>acc.value).includes(item.supplierAccount.accNo)) {
+        name.push({label:item.supplierAccount.name,value:item.supplierAccount.accNo});
+      }
+      if (item.tempLoc) {
+        name.push({label:item.tempLoc,value:item.supplierAccount.accNo});
+      }
+    });
+  }
+  else {
+    name = supData
   }
 
-  const getExclamation=(item:any)=> {
-
-const visible =(item.inStockQTY + item.Incommingty - item.salesOrdQTY <= item.minStock) && (item.fromLoc > 0)
-
-    return visible
+  if (!name.map(acc=>acc.value).includes(data.accNo)) {
+    name.push({label:data.supplierName,value:data.accNo});
   }
 
-export const getStockOrder = (item: any[]) => {
+  if (!name.map(na=>na.label).includes("MALAGA WAREHOUSE") && data.centralLocation > 0) {
+    name.push({label:"MALAGA WAREHOUSE",value:-1});
+  }
+
+  if (!name.map(na=>na.label).includes("GYMPIE WAREHOUSE") && data.centralLocation > 0) {
+    name.push({label:"GYMPIE WAREHOUSE",value:-1});
+  }
+
+  if (!name.map(na=>na.label).includes("KALGOORLIE WAREHOUSE") && data.centralLocation > 0) {
+    name.push({label:"KALGOORLIE WAREHOUSE",value:-1});
+  }
+
+  return name;
+};
+
+const getExclamation = (item: any) => {
+  const visible =
+    item.inStockQTY + item.Incommingty - item.salesOrdQTY <= item.minStock &&
+    item.fromLoc > 0;
+
+  return visible;
+};
+
+export const getStockOrder = (item: any[],supData:any) => {
   const stockOrder = item.map((e, i) => {
     return {
       id: i,
-      exclamationMark:getExclamation(e),
+      exclamationMark: getExclamation(e),
       stockCode: e.stockItem.stockCode,
       billomatHdr: e.stockItem?.billomatHdr,
       branchName: e.stockLocation.lName,
@@ -106,7 +107,7 @@ export const getStockOrder = (item: any[]) => {
       locationAddress2: e.stockLocation.deladdr2,
       locationAddress3: e.stockLocation.deladdr3,
       locationAddress4: e.stockLocation.deladdr4,
-      supplierNumber: e.supplierAccount.id,
+      supplierNumber: e.supplierAccount.accNo,
       supplierAccount: e.supplierAccount,
       description: e.stockItem.description,
       minStock: e.minStock,
@@ -115,7 +116,7 @@ export const getStockOrder = (item: any[]) => {
       purchOrdQTY: e.purchOrdQTY,
       Incommingty: e.Incommingty,
       salesOrdQTY: e.salesOrdQTY,
-      name: e.supplierName,
+      name: {name:e.supplierName,accNo:e.supplierAccount.accNo},
       sales1: e.sales1,
       sales2: e.sales2,
       sales3: e.sales3,
@@ -129,8 +130,8 @@ export const getStockOrder = (item: any[]) => {
       supplierCode: e.supplierCode,
       fromLoc: e.centralLocation,
       workOrder: processWorkorder(e),
-      nameArray:addSupNames(e),
-      isExpand:e.stockItem.billomatHdr?true:false
+      nameArray: addSupNames(e,supData),
+      isExpand: e.stockItem.billomatHdr ? true : false,
     };
   });
 
@@ -138,42 +139,180 @@ export const getStockOrder = (item: any[]) => {
 };
 
 export interface FilterFn<TData extends RowData> {
-  (row: Row<TData>, columnId: string, filterValue: any, addMeta: (meta: FilterMeta) => void): boolean;
+  (
+    row: Row<TData>,
+    columnId: string,
+    filterValue: any,
+    addMeta: (meta: FilterMeta) => void
+  ): boolean;
   resolveFilterValue?: TransformFilterValueFn<TData>;
   autoRemove?: ColumnFilterAutoRemoveTestFn<TData>;
 }
 
-let i=0
-export const fuseFilterFn: FilterFn<any> = (
-  row,
-  columnId,
-  filterValue,
-  addMeta,
-) => {
- // console.log(row.getValue('branchName'));
-  i++
-  const searchPattern = filterValue;
+export const getWareHouseData = (data: any) => {
+  const wareHouseData = data
+    ?.map((data1: any) => {
+      const chartData = [
+        data1?.sales0 ? data1?.sales0 : 0,
+        data1?.sales1 ? data1?.sales1 : 0,
+        data1?.sales2 ? data1?.sales2 : 0,
+        data1?.sales3 ? data1?.sales3 : 0,
+        data1?.sales4 ? data1?.sales4 : 0,
+        data1?.sales5 ? data1?.sales5 : 0,
+        data1?.sales6 ? data1?.sales6 : 0,
+      ];
 
-  // Create a new Fuse instance with an array containing the value in the specified column (row.getValue(columnId))
- // const fuse = new Fuse([row.getValue(columnId)]);
+      return {
+        ...data1,
+        ...{
+          Incommingty: data1?.Incommingty,
+          chartData,
+        },
+      };
+    })
+    .filter(
+      (data: any) =>
+        data?.chartData.reduce(function (
+          accumulator: number,
+          currentValue: number
+        ) {
+          return accumulator + currentValue;
+        },
+        0) > 0 ||
+        data.incommingty > 0 ||
+        data.inStockQTY > 0
+    );
 
-  // Perform a fuzzy search on the value in the specified column with the searchPattern
- // const searchResults = fuse.search(searchPattern);
- // console.log(row.getValue('branchName'));
-  
-console.log(('branchName'));
+  const finalData = <any>[];
 
-const con =filterValue.includes(row.getValue('branchName'))
-
-  if (con) {
-;
-    // If any search result is found, consider the row as a match
-    // Optionally, add any metadata for the search results
-   addMeta(con);
-    return true; // Return true to indicate that the row matches the filter
-  }
-
- // If no search results are found, return false to indicate that the row doesn't match the filter
- return false;
+  wareHouseData.length > 0 &&
+    wareHouseData.forEach((obj: any) => {
+      const findValue = finalData.findIndex(
+        (d: any) =>
+          d.stockLocation?.lName === obj.stockLocation?.lName &&
+          d.inStockQTY === obj.inStockQTY &&
+          d.incommingty === obj.incommingty
+      );
+     
+      
+      if (findValue === -1) {
+        finalData.push(obj);
+      }
+    });
+  return finalData;
 };
 
+type Acc ={
+  value:number
+  label:string
+}
+export const getSupplier=(data:any)=>{
+  const supdata = <any>[]
+  let supNo = ''
+  data.forEach((elem:any) => {
+    supNo = elem.accNo
+    if (supNo && !supdata.map((acc:Acc)=>acc.value).includes(supNo)) {
+      supdata.push({value:elem.accNo,label:elem.name,supData:elem})
+    }
+  })
+  return supdata
+}
+
+export const  sendOrdersNew=async(selectData:any)=> {
+  const sendOrder = <any>[]
+
+  selectData.forEach((d) => {
+    if (d.select === true && d.calcReOrd > 0) {
+      // console.log(d);
+      //  console.log((d.select === true && d.calcReOrd > 0 && this.supplierStockItems.find(({supplierAccount,stockCode})=>supplierAccount.name.toLowerCase().trim()===d.name.toLowerCase().trim() && stockCode.toLowerCase().trim() === d.stockCode.toLowerCase().trim() )) )
+      if (
+        d.select === true &&
+        d.calcReOrd > 0 &&
+        this.supplierStockItems.find(
+          ({ supplierAccount, stockCode }) =>
+            supplierAccount.name.toLowerCase().trim() ===
+            d.name.toLowerCase().trim() &&
+            stockCode.toLowerCase().trim() ===
+            d.stockCode.toLowerCase().trim()
+        )
+      ) {
+        const data = this.supplierStockItems.find(
+          ({ supplierAccount, stockCode }) =>
+            supplierAccount.name.toLowerCase().trim() ===
+            d.name.toLowerCase().trim() &&
+            stockCode.toLowerCase().trim() ===
+            d.stockCode.toLowerCase().trim()
+        )
+        // console.log(data);
+        sendOrder.push({
+          ...d,
+          supplierAccount: data.supplierAccount,
+          supplierNumber: data.supplierAccount.id,
+          supplierCode: data.supplierCode
+        })
+      } else if (
+        this.supplierInfo.find(
+          (sup) =>
+            sup.name.toLowerCase().trim() === d.name.toLowerCase().trim()
+        )
+      ) {
+        const supData = this.supplierInfo.find(
+          (sup) =>
+            sup.name.toLowerCase().trim() === d.name.toLowerCase().trim()
+        )
+        sendOrder.push({
+          ...d,
+          supplierAccount: supData,
+          supplierNumber: supData.id
+        })
+      } else {
+        sendOrder.push(d)
+      }
+    }
+  })
+  this.loader = 'loading'
+
+  //   console.log(sendOrder);
+
+  const url = '' + process.env.apiBaseURL + 'sendorder'
+  const config = {
+    method: 'post',
+    url,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: this.$auth.strategy.token.get()
+    },
+    data: {
+      sendOrder,
+      user: this.loggedInUser,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: this.$auth.strategy.token.get()
+      }
+    }
+  }
+  await axios(config)
+    .then((response) => {
+      if (response.data.status) {
+        this.messageColor = 'success'
+        this.dialogMessage = 'Successfully Send'
+        setTimeout(() => {
+          this.dialogMessage = ''
+          this[this.loader] = false
+          this.loader = null
+          this.loading = false
+        }, 6000)
+      }
+    })
+    .catch((error) => {
+      console.log(error, 'some err')
+      this.dialogMessage = 'SERVER ERROR'
+      this.messageColor = 'error'
+      setTimeout(() => {
+        this.dialogMessage = ''
+        this[this.loader] = false
+        this.loader = null
+        this.loading = false
+      }, 6000)
+    })
+}

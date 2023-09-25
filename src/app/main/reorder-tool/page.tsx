@@ -20,10 +20,9 @@ import {
 } from "@tanstack/react-table";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { columns } from "./components/columnsReorder";
-import { useSession } from "next-auth/react";
 import axios from "axios";
 import SelectComp from "./components/SelectComp";
-import { getLocations, getStockOrder } from "./lib/lib";
+import { getLocations, getStockOrder, getSupplier } from "./lib/lib";
 
 import ReorderDataTable from "./components/data-table";
 import { Input } from "@/components/ui/input";
@@ -32,25 +31,22 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { downloadToExcel } from "./lib/xlsx";
 import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import WarehouseComp from "./components/warehouseComp";
+import { toast } from "react-toastify";
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
@@ -107,6 +103,7 @@ const ReorderTool = (props: Props) => {
   };
 
   const [data, setData] = useState<any[]>([]);
+  const [supplierData, setSupplierData] = useState([]);
   const [autoResetPageIndex, skipAutoResetPageIndex] = useSkipper();
   const [arrayOfLocations, setArrayOfLocations] = useState<string[]>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -120,7 +117,6 @@ const ReorderTool = (props: Props) => {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [wareHouseData, setwareHouseData] = useState({});
   const [chartModal, setChartModal] = useState(false);
-
 
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
@@ -139,7 +135,7 @@ const ReorderTool = (props: Props) => {
   }, [searchValue]);
 
   useEffect(() => {
-    const getData = async () => {
+    const getData = async (supData: any) => {
       const url = "/api/stktool";
       const config = {
         method: "get",
@@ -150,14 +146,49 @@ const ReorderTool = (props: Props) => {
       };
       try {
         const res = await axios(config);
-        const stkData = getStockOrder(res.data.slice(0, 1000));
+        const reduceSupData = supData.map((item: any) => ({
+          value: item.value,
+          label: item.label,
+        }));
+        const stkData = getStockOrder(res.data.slice(0, 1000), reduceSupData);
+
         setData(stkData);
+        setSupplierData(supData);
         setArrayOfLocations(getLocations(res.data));
       } catch (error) {
         console.log(error);
       }
     };
-    getData();
+
+    const getSupplierData = async () => {
+      const url = "/api/supplieraccount";
+      const config = {
+        method: "get",
+        url,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      try {
+        const res = await axios(config);
+        const supData = getSupplier(res.data);
+
+        return supData;
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const getAllData = async () => {
+      try {
+        const supData = await getSupplierData();
+        const allData = await getData(supData);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getAllData();
   }, []);
 
   const table = useReactTable({
@@ -244,10 +275,93 @@ const ReorderTool = (props: Props) => {
     //  console.log(table.getFilteredRowModel());
   }, [options, optionsTwo]);
 
+  const sendOrder = async () => {
+    const orderData = table.getFilteredSelectedRowModel().rows;
+    console.log("okk");
+
+    if (orderData.length === 0) {
+      toast.warning("Select At Least One Order", { position: "top-center" });
+      return;
+    }
+    if (orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length > 0) {
+      toast.warning("Reorder Value Should Be Greather Than 0", { position: "top-center" });
+      return;
+    }
+    //
+    
+    
+
+    const postData = orderData
+      .map((item) => item.original)
+      .filter((item1) => item1.calcReOrd > 0)
+      .map((subItem: any) => {
+        const isChectItemWithCode = subItem.stockItem.supplierStockItems.find(
+          ({ supplierAccount, stockCode }: any) =>
+            supplierAccount.accNo === subItem.name.accNo &&
+            stockCode === subItem.stockCode
+        );
+
+        if (isChectItemWithCode) {
+          return {
+            ...subItem,
+            supplierAccount: isChectItemWithCode.supplierAccount,
+            supplierNumber: isChectItemWithCode.supplierAccount.accNo,
+            supplierCode: isChectItemWithCode.supplierCode,
+          };
+        } else if (
+          supplierData.find((sup: any) => {
+            return sup.supData.accNo === subItem.name.accNo;
+          })
+        ) {
+          const supAccont: any = supplierData.find((sup: any) => {
+            return sup.supData.accNo === subItem.name.accNo;
+          });
+
+          if (supAccont) {
+            return {
+              ...subItem,
+              supplierAccount: supAccont.supData,
+              supplierNumber: supAccont.supData.accNo,
+            };
+          }
+          return subItem;
+        } else {
+          return subItem;
+        }
+      });
+
+      
+   
+console.log(postData);
+
+
+
+    try {
+      const config = {
+        method: "post",
+        url: "/api/reordertool/sendorder",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: postData,
+      };
+
+      const res = await axios(config);
+
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div className="pr-5 pl-5 py-5 ">
       <div className="flex justify-between items-center p-5">
-       <WarehouseComp chartModal={chartModal} setChartModal={setChartModal} details={wareHouseData}/>
+        <WarehouseComp
+          chartModal={chartModal}
+          setChartModal={setChartModal}
+          details={wareHouseData}
+        />
         <div>
           {" "}
           <Input
@@ -277,11 +391,7 @@ const ReorderTool = (props: Props) => {
           />
         </div>
         <div></div>
-        <div>
-          <Button variant={"outline"} onClick={() => downloadToExcel(data)}>
-            Download
-          </Button>
-        </div>
+
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -289,8 +399,13 @@ const ReorderTool = (props: Props) => {
                 Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>SELECT COLUMNS</DropdownMenuLabel>
+
+            <DropdownMenuContent
+              align="end"
+              className="rounded-lg borrder border-gray-500 "
+            >
+              <DropdownMenuLabel>Select Columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
@@ -298,11 +413,9 @@ const ReorderTool = (props: Props) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
-                      className="capitalize"
+                      className="capitalize cursor-pointer"
                       checked={column.getIsVisible()}
                       onCheckedChange={(value: boolean) => {
-                        console.log(value);
-
                         column.toggleVisibility(!!value);
                       }}
                     >
@@ -314,7 +427,101 @@ const ReorderTool = (props: Props) => {
           </DropdownMenu>
         </div>
 
-        <ThemeToggle className="ml-4" />
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">Actions</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="rounded-lg borrder border-gray-300 w-56">
+              <DropdownMenuLabel className="">Select Action</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => downloadToExcel(data)}
+                    className="rounded-lg w-40 text-left"
+                  >
+                    Download
+                  </Button>
+                  <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={sendOrder}
+                    className="rounded-lg w-40 text-left"
+                  >
+                    Send Orders
+                  </Button>
+                  <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {}}
+                    className="rounded-lg w-40 text-left"
+                  >
+                    Transfer
+                  </Button>
+                  <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {}}
+                    className="rounded-lg w-40 text-left"
+                  >
+                    Work Order
+                  </Button>
+                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {}}
+                    className="rounded-lg w-40"
+                  >
+                    Snoozed Items
+                  </Button>
+                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {}}
+                    className="rounded-lg w-40"
+                  >
+                    Exclude Items
+                  </Button>
+                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {}}
+                    className="rounded-lg w-40"
+                  >
+                    Report One
+                  </Button>
+                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {}}
+                    className="rounded-lg w-40"
+                  >
+                    Refresh
+                  </Button>
+                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <div className=" p-1">
         <ReorderDataTable useTable={table} data={data} columns={columns} />

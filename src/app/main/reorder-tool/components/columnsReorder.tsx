@@ -49,49 +49,33 @@ export const columns = [
         value: string;
         label: string;
       } | null>({
-        value: initialValue,
-        label: initialValue,
+        value: initialValue?.accNo,
+        label: initialValue?.name,
       });
-      const [value, setValue] = useState(initialValue);
-
-      const [selectedOption, setSelectedOption] = useState("");
-
-      // Handle the change event when an option is selected
-      // const handleSelectChange = (event) => {
-      //   setSelectedOption(event.target.value);
-      //   table.options.meta?.updateData(row.index, id, event.target.value);
-      // };
+      
 
       // When the input is blurred, we'll call our table meta's updateData function
-      const onBlur = () => {
-        table.options.meta?.updateData(row.index, id, option?.value);
-      };
+      
 
       // If the initialValue is changed external, sync it up with our state
       React.useEffect(() => {
-        setValue(initialValue);
+       setOption({value: initialValue?.accNo,label: initialValue?.name});
       }, [initialValue]);
 
       //  console.log('updated');
       const handle = (val: any) => {
-        table.options.meta?.updateData(row.index, id, val?.value as string);
+        table.options.meta?.updateData(row.index, id, val);
       };
+      
+      
 
       const options =
         row.original.nameArray &&
-        row.original.nameArray.map((data: string) => ({
-          value: data,
-          label: data,
-        }));
+        row.original.nameArray
+        
       return (
         <>
           <div style={{ width: "200px" }}>
-            {/* <select id="mySelect" value={selectedOption} onChange={handleSelectChange}>
-        <option value="">Select...</option>
-        <option value="option1">Option 1</option>
-        <option value="option2">Option 2</option>
-        <option value="option3">Option 3</option>
-      </select> */}
             <ReactSelect
               id={row.id}
               defaultValue={option}

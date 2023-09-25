@@ -14,7 +14,13 @@ import {
   Table as TableType,
   flexRender,
 } from "@tanstack/react-table";
-import React, { Fragment, useCallback, useMemo, useState } from "react";
+import React, {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { MdFilterList, MdFilterListOff } from "react-icons/md";
 
 interface DataTableProps<TData, TValue> {
@@ -44,7 +50,6 @@ const ReorderDataTable = <TData, TValue>({
                   >
                     {header.isPlaceholder ? null : (
                       <>
-
                         <div
                           {...{
                             className: header.column.getCanSort()
@@ -63,13 +68,16 @@ const ReorderDataTable = <TData, TValue>({
                           }[header.column.getIsSorted() as string] ?? null}
                         </div>
                         <div className="flex justify-center items-center">
-                          
-                          {header.column.columnDef.meta?.filterVisible  ? (
+                          {header.column.columnDef.meta?.filterVisible ? (
                             <div>
-                              <FilterVisible column={header.column} table={table}/>
-                              
+                              <FilterVisible
+                                column={header.column}
+                                table={table}
+                              />
                             </div>
-                          ) : ''}
+                          ) : (
+                            ""
+                          )}
                         </div>
                       </>
                     )}
@@ -99,7 +107,10 @@ const ReorderDataTable = <TData, TValue>({
                 {row.getIsExpanded() && (
                   <TableRow>
                     {/* 2nd row is a custom 1 cell row */}
-                    <TableCell colSpan={row.getVisibleCells().length} className="h-24 text-center">
+                    <TableCell
+                      colSpan={row.getVisibleCells().length}
+                      className="h-24 text-center"
+                    >
                       hell
                     </TableCell>
                   </TableRow>
@@ -135,15 +146,21 @@ const ReorderDataTable = <TData, TValue>({
 
 export default ReorderDataTable;
 
-
-function FilterVisible (
- { column,
-  table}:{column: Column<any, unknown>,
-    table: TableType<any>}
-) {
+function FilterVisible({
+  column,
+  table,
+}: {
+  column: Column<any, unknown>;
+  table: TableType<any>;
+}) {
   const [visible, setVisible] = useState(true);
   const toggleChange = () => {
-    setVisible((pre) => !pre);
+    setVisible((pre) => {
+      if (pre === false) {
+        column.setFilterValue('');
+      }
+      return !pre;
+    });
   };
 
   return (
@@ -162,14 +179,9 @@ function FilterVisible (
           className="cursor-pointer"
         />
       )}
-      
     </div>
   );
 }
-
-
-
-
 
 function Filter({
   column,
@@ -278,8 +290,7 @@ function DebouncedInput({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       className="text-end  rounded-md  dark:text-black border bg-green-50  border-green-500 focus:outline-none focus:border-red-500 p-1"
-      style={{maxWidth:'100px'}}
+      style={{ maxWidth: "100px" }}
     />
   );
 }
-
