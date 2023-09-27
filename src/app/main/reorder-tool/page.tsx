@@ -47,6 +47,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
 import WarehouseComp from "./components/warehouseComp";
 import { toast } from "react-toastify";
+import { Puff, Watch } from "react-loader-spinner";
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
@@ -117,6 +118,7 @@ const ReorderTool = (props: Props) => {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [wareHouseData, setwareHouseData] = useState({});
   const [chartModal, setChartModal] = useState(false);
+  const [loading,setLoading] = useState(false)
 
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
@@ -279,14 +281,14 @@ const ReorderTool = (props: Props) => {
     const orderData = table.getFilteredSelectedRowModel().rows;
     console.log("okk");
 
-    if (orderData.length === 0) {
-      toast.warning("Select At Least One Order", { position: "top-center" });
-      return;
-    }
-    if (orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length > 0) {
-      toast.warning("Reorder Value Should Be Greather Than 0", { position: "top-center" });
-      return;
-    }
+    // if (orderData.length === 0) {
+    //   toast.warning("Select At Least One Order", { position: "top-center" });
+    //   return;
+    // }
+    // if (orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length > 0) {
+    //   toast.warning("Reorder Value Should Be Greather Than 0", { position: "top-center" });
+    //   return;
+    // }
     //
     
     
@@ -335,7 +337,6 @@ const ReorderTool = (props: Props) => {
 console.log(postData);
 
 
-
     try {
       const config = {
         method: "post",
@@ -346,9 +347,25 @@ console.log(postData);
         data: postData,
       };
 
-      const res = await axios(config);
+      // const res = await axios(config);
+      const id = toast.loading(<div className="flex items-center justify-around"><Puff
+      height="80"
+      width="80"
+      radius={1}
+      color="#4fa94d"
+      ariaLabel="puff-loading"
+      wrapperStyle={{}}
+      wrapperClass=""
+      visible={true}
+    />Sending....</div>,{icon:false})
+const res= await new Promise((resolve)=>{
+  setTimeout(()=>{
+resolve('hi')
+  },5000)
+})
 
-      console.log(res);
+toast.update(id, { render: "All is good", type: "success", isLoading: false,autoClose:2000,style:{} });
+     // console.log(res);
     } catch (error) {
       console.log(error);
     }
