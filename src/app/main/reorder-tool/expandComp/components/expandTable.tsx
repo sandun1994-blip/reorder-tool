@@ -22,16 +22,16 @@ import React, {
   useState,
 } from "react";
 import { MdFilterList, MdFilterListOff } from "react-icons/md";
-import ExpandComp from "../expandComp/components/expandComp";
 
 interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
   useTable: TableType<any>;
-  supData :any
-  
 }
 
-const ReorderDataTable = <TData, TValue>({
-  supData,
+const ExpandDataTable = <TData, TValue>({
+  columns,
+  data,
   useTable,
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
@@ -104,17 +104,6 @@ const ReorderDataTable = <TData, TValue>({
                     </TableCell>
                   ))}
                 </TableRow>
-                {row.getIsExpanded() && (
-                  <TableRow className="border border-gray-400">
-                    {/* 2nd row is a custom 1 cell row */}
-                    <TableCell
-                      colSpan={row.getVisibleCells().length}
-                      className="h-24 text-center"
-                    >
-                      <ExpandComp supData={supData} mainDataItem={row.original}/>
-                    </TableCell>
-                  </TableRow>
-                )}
               </Fragment>
             ))
           ) : (
@@ -123,28 +112,13 @@ const ReorderDataTable = <TData, TValue>({
             </TableRow>
           )}
         </TableBody>
-        {/* <tfoot>
-          {table.getFooterGroups().map((footerGroup) => (
-            <tr key={footerGroup.id}>
-              {footerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.footer,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </tfoot> */}
+        
       </Table>
     </div>
   );
 };
 
-export default ReorderDataTable;
+export default ExpandDataTable;
 
 function FilterVisible({
   column,

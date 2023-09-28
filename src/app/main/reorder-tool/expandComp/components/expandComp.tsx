@@ -19,12 +19,7 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
-import { columns } from "./components/columnsReorder";
 import axios from "axios";
-import SelectComp from "./components/SelectComp";
-import { getLocations, getStockOrder, getSupplier } from "./lib/lib";
-
-import ReorderDataTable from "./components/data-table";
 import { Input } from "@/components/ui/input";
 
 import {
@@ -42,10 +37,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { downloadToExcel } from "./lib/xlsx";
 import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
-import WarehouseComp from "./components/warehouseComp";
 import { toast } from "react-toastify";
 import { Puff, Watch } from "react-loader-spinner";
 import {
@@ -57,6 +50,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { columnsExpand } from "./columnExpand";
+import { getLocations, getStockOrder, getSupplier } from "../../lib/lib";
+import { downloadToExcel } from "../../lib/xlsx";
+import ExpandDataTable from "./expandTable";
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
@@ -69,7 +66,10 @@ declare module "@tanstack/table-core" {
   }
 }
 
-type Props = {};
+type Props = {
+    supData:any 
+    mainDataItem:any
+};
 
 function useSkipper() {
   const shouldSkipRef = React.useRef(true);
@@ -87,7 +87,12 @@ function useSkipper() {
   return [shouldSkip, skip] as const;
 }
 
-const ReorderTool = (props: Props) => {
+const ExpandComp = ({ supData,mainDataItem}: Props) => {
+
+
+
+console.log(mainDataItem.stockCode);
+
   const globalFns: FilterFn<any> = (
     row,
     columnId: string,
@@ -113,7 +118,6 @@ const ReorderTool = (props: Props) => {
   };
 
   const [data, setData] = useState<any[]>([]);
-  const [supplierData, setSupplierData] = useState([]);
   const [autoResetPageIndex, skipAutoResetPageIndex] = useSkipper();
   const [arrayOfLocations, setArrayOfLocations] = useState<string[]>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -135,19 +139,16 @@ const ReorderTool = (props: Props) => {
   );
 
   const columnDef = useMemo(() => {
-    return columns;
+    return columnsExpand;
   }, []);
 
   useEffect(() => {
-    //    table.getAllColumns().filter((col) => col.id === 'stockCode')[0].setFilterValue(searchValue);
-    //console.log(table.getGlobalAutoFilterFn());
-
     setGlobalFilter(searchValue);
   }, [searchValue]);
 
   useEffect(() => {
-    const getData = async (supData: any) => {
-      const url = "/api/stktool";
+    const getData = async () => {
+      const url = "/api/billomathdr/" + mainDataItem.stockCode ;
       const config = {
         method: "get",
         url,
@@ -161,39 +162,23 @@ const ReorderTool = (props: Props) => {
           value: item.value,
           label: item.label,
         }));
+        console.log(res.data);
+        
         const stkData = getStockOrder(res.data.slice(0, 1000), reduceSupData);
-
         setData(stkData);
-        setSupplierData(supData);
-        setArrayOfLocations(getLocations(res.data));
       } catch (error) {
         console.log(error);
       }
     };
 
-    const getSupplierData = async () => {
-      const url = "/api/supplieraccount";
-      const config = {
-        method: "get",
-        url,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-      try {
-        const res = await axios(config);
-        const supData = getSupplier(res.data);
-
-        return supData;
-      } catch (error) {
-        console.log(error);
-      }
-    };
+    ;
 
     const getAllData = async () => {
       try {
-        const supData = await getSupplierData();
-        const allData = await getData(supData);
+        
+        const allData = await getData();
+        console.log(allData);
+        
       } catch (error) {
         console.log(error);
       }
@@ -614,39 +599,22 @@ const ReorderTool = (props: Props) => {
 
   return (
     <div className="pr-5 pl-5 py-5 ">
-      <div className="flex justify-between items-center p-5">
-        <WarehouseComp
-          chartModal={chartModal}
-          setChartModal={setChartModal}
-          details={wareHouseData}
-        />
+      
+       
+        
+        <div className="flex justify-between items-center p-5">
         <div>
-          {" "}
-          <Input
-            type="text"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
-        <div className="">
-          {" "}
-          <SelectComp
-            id={"loc-filter"}
-            options={options}
-            setOptions={setOptions}
-            optionArray={optionsArray}
-            setGlobalFilter={setGlobalFilter}
-          />
-        </div>
+         
+         <Input
+           type="text"
+           value={searchValue}
+           onChange={(e) => setSearchValue(e.target.value)}
+           className="max-w-sm border border-gray-300"
+         />
+       </div>
+       
         <div className=" ml-3">
-          <SelectComp
-            id={"loc-filter-2"}
-            options={optionsTwo}
-            setOptions={setOptionsTwo}
-            optionArray={optionsArray}
-            setGlobalFilter={setGlobalFilter}
-          />
+         
         </div>
         <div></div>
 
@@ -783,8 +751,10 @@ const ReorderTool = (props: Props) => {
           </DropdownMenu>
         </div>
       </div>
+       
+        
       <div className=" p-1">
-        <ReorderDataTable useTable={table} supData={supplierData} />
+        <ExpandDataTable useTable={table} data={data} columns={columnsExpand} />
       </div>
 
       <div className="h-4" />
@@ -878,4 +848,4 @@ const ReorderTool = (props: Props) => {
   );
 };
 
-export default ReorderTool;
+export default ExpandComp;

@@ -22,13 +22,15 @@ const SelectComp = ({
   };
 
   return (
-    <div style={{ width: "300px" }} className="ml-2">
+    <div style={{ width: "300px" }} className="ml-2 ">
       <ReactSelect
         id={id}
         defaultValue={options}
         onChange={onChange}
         options={optionArray}
         isMulti={true}
+        className="bg-black"
+        
       />
     </div>
   );

@@ -87,7 +87,7 @@ const addSupNames = (data: any,supData:any) => {
 
 const getExclamation = (item: any) => {
   const visible =
-    item.inStockQTY + item.Incommingty - item.salesOrdQTY <= item.minStock &&
+    item.inStockQTY + item.incommingty - item.salesOrdQTY <= item.minStock &&
     item.fromLoc > 0;
 
   return visible;
@@ -114,7 +114,7 @@ export const getStockOrder = (item: any[],supData:any) => {
       maxStock: e.maxStock,
       inStockQTY: e.inStockQTY,
       purchOrdQTY: e.purchOrdQTY,
-      Incommingty: e.Incommingty,
+      incommingty: e.incommingty,
       salesOrdQTY: e.salesOrdQTY,
       name: {name:e.supplierName,accNo:e.supplierAccount.accNo},
       sales1: e.sales1,
@@ -165,7 +165,7 @@ export const getWareHouseData = (data: any) => {
       return {
         ...data1,
         ...{
-          Incommingty: data1?.Incommingty,
+          incommingty: data1?.incommingty,
           chartData,
         },
       };

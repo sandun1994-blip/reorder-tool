@@ -26,17 +26,7 @@ declare module "@tanstack/react-table" {
 
 const columnHelper = createColumnHelper<any>();
 
-export const columns = [
-  columnHelper.accessor("fromLoc", {
-    header: () => "",
-    cell: (info) => (
-      <div className=" flex items-center justify-center">
-        {info.getValue() ? <FcHighPriority size={25} /> : " "}
-      </div>
-    ),
-    enableColumnFilter: false,
-    footer: (info) => info.column.id,
-  }),
+export const columnsExpand = [
   columnHelper.accessor((row) => row.name, {
     id: "name",
     meta: {
@@ -89,55 +79,12 @@ export const columns = [
     header: () => <span>Supplier</span>,
     footer: (info) => info.column.id,
   }),
-  columnHelper.accessor("onHandQty", {
-    header: () => "",
-    enableColumnFilter: false,
-    cell: ({ getValue, row: { index, original }, column: { id }, table }) => {
-      // console.log(info.row.original.fromLoc);
-      const handleClick = () => {
-        table.options.meta?.setwareHouseData(original);
-        table.options.meta?.setChartModal(true);
-      };
-
-      return (
-        <>
-          {original.fromLoc > 0 ? (
-            <Button variant={"outline"} size={"sm"} onClick={handleClick}>
-              QTY
-            </Button>
-          ) : (
-            ""
-          )}
-        </>
-      );
-    },
-    footer: (id) => id,
-  }),
   columnHelper.accessor("stockCode", {
     header: () => <span>Stockcode</span>,
     footer: (info) => info.column.id,
     meta: {
       filterVisible: true,
     },
-  }),
-  columnHelper.accessor("expander", {
-    header: () => "",
-    enableColumnFilter: false,
-    cell: ({ row }) => {
-      return row.original.isExpand ? (
-        <button
-          {...{
-            onClick: row.getToggleExpandedHandler(),
-            style: { cursor: "pointer" },
-          }}
-        >
-          {row.getIsExpanded() ? <MdExpandLess  size={25} color={'red'}/> : <MdExpandMore size={25} color={'red'}/>}
-        </button>
-      ) : (
-        ""
-      );
-    },
-    footer: (info) => info.column.id,
   }),
   columnHelper.accessor("description", {
     header: "Description",
@@ -231,11 +178,6 @@ export const columns = [
         />
       );
     },
-    footer: (info) => info.column.id,
-  }),
-  columnHelper.accessor("pause", {
-    header: "Pause",
-    enableColumnFilter: false,
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("select", {
