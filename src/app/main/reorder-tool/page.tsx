@@ -118,7 +118,7 @@ const ReorderTool = (props: Props) => {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [wareHouseData, setwareHouseData] = useState({});
   const [chartModal, setChartModal] = useState(false);
-  const [loading,setLoading] = useState(false)
+  const [sending, setSending] = useState(false);
 
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
@@ -281,18 +281,25 @@ const ReorderTool = (props: Props) => {
     const orderData = table.getFilteredSelectedRowModel().rows;
     console.log("okk");
 
-    // if (orderData.length === 0) {
-    //   toast.warning("Select At Least One Order", { position: "top-center" });
-    //   return;
-    // }
-    // if (orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length > 0) {
-    //   toast.warning("Reorder Value Should Be Greather Than 0", { position: "top-center" });
-    //   return;
-    // }
-    //
-    
-    
+    if (orderData.length === 0) {
+      toast.warning("Select At Least One Order", {
+        position: "top-center",
+        theme: "colored",
+      });
+      return;
+    }
+    if (
+      orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length >
+      0
+    ) {
+      toast.warning("Reorder Value Should Be Greather Than 0", {
+        position: "top-center",
+        theme: "colored",
+      });
+      return;
+    }
 
+    setSending(true);
     const postData = orderData
       .map((item) => item.original)
       .filter((item1) => item1.calcReOrd > 0)
@@ -332,10 +339,24 @@ const ReorderTool = (props: Props) => {
         }
       });
 
-      
-   
-console.log(postData);
+    console.log(postData);
 
+    const idsend = toast.loading(
+      <div className="flex items-center justify-around text-slate-950 font-semibold">
+        <Puff
+          height="50"
+          width="50"
+          radius={1}
+          color="#4fa94d"
+          ariaLabel="puff-loading"
+          wrapperStyle={{}}
+          wrapperClass=""
+          visible={true}
+        />
+        Sending........
+      </div>,
+      { icon: false }
+    );
 
     try {
       const config = {
@@ -347,27 +368,238 @@ console.log(postData);
         data: postData,
       };
 
-      // const res = await axios(config);
-      const id = toast.loading(<div className="flex items-center justify-around"><Puff
-      height="80"
-      width="80"
-      radius={1}
-      color="#4fa94d"
-      ariaLabel="puff-loading"
-      wrapperStyle={{}}
-      wrapperClass=""
-      visible={true}
-    />Sending....</div>,{icon:false})
-const res= await new Promise((resolve)=>{
-  setTimeout(()=>{
-resolve('hi')
-  },5000)
-})
+      const res = await axios(config);
 
-toast.update(id, { render: "All is good", type: "success", isLoading: false,autoClose:2000,style:{} });
-     // console.log(res);
+      console.log(res);
+
+      toast.update(idsend, {
+        render: "Created",
+        isLoading: false,
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        type: "success",
+      });
+      // console.log(res);
+
+      const popupTost = (time: number, element: any) => {
+        setTimeout(() => {
+          if (element.status === "fulfilled") {
+            toast(`PO ${element.value} Created`, {
+              position: "top-right",
+              autoClose: 2000 * time,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: false,
+              draggable: true,
+              progress: undefined,
+              theme: "colored",
+              type: "success",
+            });
+          } else {
+            toast("Order is not created", {
+              position: "top-right",
+              autoClose: 2000 * time,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: false,
+              draggable: true,
+              progress: undefined,
+              theme: "colored",
+              type: "error",
+            });
+          }
+        }, 1000 * time);
+      };
+      const valu = res.data.map((item: any) => ({
+        ...item,
+        value: item.value.poNumber,
+      }));
+      for (let index = 0; index < valu.length; index++) {
+        const element = valu[index];
+        popupTost(index + 1, element);
+      }
+      setSending(false);
     } catch (error) {
+      toast.update(idsend, {
+        render: "Internal Error",
+        isLoading: false,
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        type: "error",
+      });
       console.log(error);
+      setSending(false);
+    }
+  };
+
+  const sendTransfers = async () => {
+    const orderData = table.getFilteredSelectedRowModel().rows;
+
+    if (orderData.length === 0) {
+      toast.warning("Select At Least One Order", {
+        position: "top-center",
+        theme: "colored",
+      });
+      return;
+    }
+    if (
+      orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length >
+      0
+    ) {
+      toast.warning("Reorder Value Should Be Greather Than 0", {
+        position: "top-center",
+        theme: "colored",
+      });
+      return;
+    }
+    setSending(true);
+    const postData = orderData
+      .map((item) => item.original)
+      .filter((item1) => item1.calcReOrd > 0)
+      .map((subItem: any) => {
+        const isChectItemWithCode = subItem.stockItem.supplierStockItems.find(
+          ({ supplierAccount, stockCode }: any) =>
+            supplierAccount.accNo === subItem.name.accNo &&
+            stockCode === subItem.stockCode
+        );
+
+        if (isChectItemWithCode) {
+          return {
+            ...subItem,
+            supplierAccount: isChectItemWithCode.supplierAccount,
+            supplierNumber: isChectItemWithCode.supplierAccount.accNo,
+            supplierCode: isChectItemWithCode.supplierCode,
+          };
+        } else if (
+          supplierData.find((sup: any) => {
+            return sup.supData.accNo === subItem.name.accNo;
+          })
+        ) {
+          const supAccont: any = supplierData.find((sup: any) => {
+            return sup.supData.accNo === subItem.name.accNo;
+          });
+
+          if (supAccont) {
+            return {
+              ...subItem,
+              supplierAccount: supAccont.supData,
+              supplierNumber: supAccont.supData.accNo,
+            };
+          }
+          return subItem;
+        } else {
+          return subItem;
+        }
+      });
+
+    console.log(postData);
+
+    const id = toast.loading(
+      <div className="flex items-center justify-around text-slate-950 font-semibold">
+        <Puff
+          height="50"
+          width="50"
+          radius={1}
+          color="#4fa94d"
+          ariaLabel="puff-loading"
+          wrapperStyle={{}}
+          wrapperClass=""
+          visible={true}
+        />
+        Sending........
+      </div>,
+      { icon: false }
+    );
+
+    try {
+      const config = {
+        method: "post",
+        url: "/api/reordertool/sendtransfer",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: postData,
+      };
+
+      const res = await axios(config);
+
+      toast.update(id, {
+        render: "Created",
+        isLoading: false,
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        type: "success",
+      });
+
+      const popupTost = (time: number, element: any) => {
+        setTimeout(() => {
+          if (element.status === "fulfilled") {
+            toast(`Stock ${element.value} Created`, {
+              position: "top-right",
+              autoClose: 2000 * time,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: false,
+              draggable: true,
+              progress: undefined,
+              theme: "colored",
+              type: "success",
+            });
+          } else {
+            toast("Stock is not created", {
+              position: "top-right",
+              autoClose: 2000 * time,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: false,
+              draggable: true,
+              progress: undefined,
+              theme: "colored",
+              type: "error",
+            });
+          }
+        }, 1000 * time);
+      };
+      const valu = res.data.map((item: any) => ({
+        ...item,
+        value: item.value.seqNo,
+      }));
+      for (let index = 0; index < valu.length; index++) {
+        const element = valu[index];
+        popupTost(index + 1, element);
+      }
+      console.log(res);
+      setSending(false);
+    } catch (error) {
+      toast.update(id, {
+        render: "Internal Error",
+        isLoading: false,
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        type: "error",
+      });
+      console.log(error);
+      setSending(false);
     }
   };
 
@@ -412,7 +644,7 @@ toast.update(id, { render: "All is good", type: "success", isLoading: false,auto
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
+              <Button variant="outline" className="ml-auto" disabled={sending}>
                 Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -447,7 +679,9 @@ toast.update(id, { render: "All is good", type: "success", isLoading: false,auto
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">Actions</Button>
+              <Button variant="outline" disabled={sending}>
+                Actions
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="rounded-lg borrder border-gray-300 w-56">
               <DropdownMenuLabel className="">Select Action</DropdownMenuLabel>
@@ -476,7 +710,7 @@ toast.update(id, { render: "All is good", type: "success", isLoading: false,auto
                 <DropdownMenuItem>
                   <Button
                     variant={"outline"}
-                    onClick={() => {}}
+                    onClick={sendTransfers}
                     className="rounded-lg w-40 text-left"
                   >
                     Transfer
