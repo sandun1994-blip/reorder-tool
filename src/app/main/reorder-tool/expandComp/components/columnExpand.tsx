@@ -27,8 +27,8 @@ declare module "@tanstack/react-table" {
 const columnHelper = createColumnHelper<any>();
 
 export const columnsExpand = [
-  columnHelper.accessor((row) => row.name, {
-    id: "name",
+  columnHelper.accessor((row) => row.sName, {
+    id: "sName",
     meta: {
       filterVisible: true,
     },
@@ -39,18 +39,16 @@ export const columnsExpand = [
         value: string;
         label: string;
       } | null>({
-        value: initialValue?.accNo,
-        label: initialValue?.name,
+        value: row.original?.name.accNo,
+        label: row.original?.name.name,
       });
       
-
       // When the input is blurred, we'll call our table meta's updateData function
-      
 
       // If the initialValue is changed external, sync it up with our state
       React.useEffect(() => {
-       setOption({value: initialValue?.accNo,label: initialValue?.name});
-      }, [initialValue]);
+       setOption({value: row.original?.name.accNo,label: row.original?.name.name});
+      }, [row.original?.name.accNo, row.original?.name.name]);
 
       //  console.log('updated');
       const handle = (val: any) => {
@@ -173,8 +171,8 @@ export const columnsExpand = [
           onChange={(e) => setValue(+e.target.value)}
           onBlur={onBlur}
           type="number"
-          className=" text-end  rounded-md  dark:text-black border   border-green-500 focus:outline-none focus:border-red-500 p-1"
-          style={{ maxWidth: "50px" }}
+          className=" text-end  rounded-md  dark:text-white border   border-green-500 focus:outline-none focus:border-red-500 p-1"
+          style={{ maxWidth: "70px" }}
         />
       );
     },

@@ -51,7 +51,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { columnsExpand } from "./columnExpand";
-import { getLocations, getStockOrder, getSupplier } from "../../lib/lib";
+import { getLocations, getStockOrder, getStockOrderTwo, getSupplier } from "../../lib/lib";
 import { downloadToExcel } from "../../lib/xlsx";
 import ExpandDataTable from "./expandTable";
 
@@ -91,7 +91,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
 
 
 
-console.log(mainDataItem.stockCode);
+
 
   const globalFns: FilterFn<any> = (
     row,
@@ -148,7 +148,7 @@ console.log(mainDataItem.stockCode);
 
   useEffect(() => {
     const getData = async () => {
-      const url = "/api/billomathdr/" + mainDataItem.stockCode ;
+      const url = "/api/billomatlines/" + mainDataItem.stockCode ;
       const config = {
         method: "get",
         url,
@@ -158,13 +158,16 @@ console.log(mainDataItem.stockCode);
       };
       try {
         const res = await axios(config);
+        console.log(res.data);
+        
         const reduceSupData = supData.map((item: any) => ({
           value: item.value,
           label: item.label,
         }));
-        console.log(res.data);
         
-        const stkData = getStockOrder(res.data.slice(0, 1000), reduceSupData);
+        
+        const stkData = getStockOrderTwo(res.data, reduceSupData,mainDataItem);
+        console.log(stkData);
         setData(stkData);
       } catch (error) {
         console.log(error);
@@ -176,8 +179,8 @@ console.log(mainDataItem.stockCode);
     const getAllData = async () => {
       try {
         
-        const allData = await getData();
-        console.log(allData);
+         await getData();
+        
         
       } catch (error) {
         console.log(error);
@@ -224,13 +227,15 @@ console.log(mainDataItem.stockCode);
       setEditedRows,
       updateData: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
+        console.log(rowIndex, columnId, value);
+        
         skipAutoResetPageIndex();
         setData((old) =>
           old.map((row, index) => {
             if (index === rowIndex) {
               return {
                 ...old[rowIndex],
-                [columnId]: value,
+                [columnId]: value.label,name:value
               };
             }
             return row;
@@ -252,13 +257,14 @@ console.log(mainDataItem.stockCode);
       setChartModal,
     },
   });
+console.log(data);
 
   useEffect(() => {
     const locations = options.map((loc) => loc.value);
     const locationsTwo = optionsTwo.map((loc) => loc.value);
 
     if (locations.length > 0 || locationsTwo.length > 0) {
-      console.log("location");
+     
 
       setGlobalFilter(
         JSON.stringify([...locations, ...locationsTwo, searchValue])
@@ -273,7 +279,7 @@ console.log(mainDataItem.stockCode);
 
   const sendOrder = async () => {
     const orderData = table.getFilteredSelectedRowModel().rows;
-    console.log("okk");
+    
 
     if (orderData.length === 0) {
       toast.warning("Select At Least One Order", {
@@ -312,11 +318,11 @@ console.log(mainDataItem.stockCode);
             supplierCode: isChectItemWithCode.supplierCode,
           };
         } else if (
-          supplierData.find((sup: any) => {
+          supData.find((sup: any) => {
             return sup.supData.accNo === subItem.name.accNo;
           })
         ) {
-          const supAccont: any = supplierData.find((sup: any) => {
+          const supAccont: any = supData.find((sup: any) => {
             return sup.supData.accNo === subItem.name.accNo;
           });
 
@@ -333,7 +339,7 @@ console.log(mainDataItem.stockCode);
         }
       });
 
-    console.log(postData);
+    
 
     const idsend = toast.loading(
       <div className="flex items-center justify-around text-slate-950 font-semibold">
@@ -364,7 +370,7 @@ console.log(mainDataItem.stockCode);
 
       const res = await axios(config);
 
-      console.log(res);
+  
 
       toast.update(idsend, {
         render: "Created",
@@ -378,7 +384,7 @@ console.log(mainDataItem.stockCode);
         theme: "colored",
         type: "success",
       });
-      // console.log(res);
+      
 
       const popupTost = (time: number, element: any) => {
         setTimeout(() => {
@@ -475,11 +481,11 @@ console.log(mainDataItem.stockCode);
             supplierCode: isChectItemWithCode.supplierCode,
           };
         } else if (
-          supplierData.find((sup: any) => {
+          supData.find((sup: any) => {
             return sup.supData.accNo === subItem.name.accNo;
           })
         ) {
-          const supAccont: any = supplierData.find((sup: any) => {
+          const supAccont: any = supData.find((sup: any) => {
             return sup.supData.accNo === subItem.name.accNo;
           });
 
@@ -496,7 +502,7 @@ console.log(mainDataItem.stockCode);
         }
       });
 
-    console.log(postData);
+    
 
     const id = toast.loading(
       <div className="flex items-center justify-around text-slate-950 font-semibold">
@@ -577,7 +583,7 @@ console.log(mainDataItem.stockCode);
         const element = valu[index];
         popupTost(index + 1, element);
       }
-      console.log(res);
+      
       setSending(false);
     } catch (error) {
       toast.update(id, {

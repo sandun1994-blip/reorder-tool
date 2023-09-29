@@ -245,7 +245,7 @@ const ReorderTool = (props: Props) => {
             if (index === rowIndex) {
               return {
                 ...old[rowIndex],
-                [columnId]: value,
+                [columnId]: value.label,name:value
               };
             }
             return row;
@@ -348,7 +348,7 @@ const ReorderTool = (props: Props) => {
         }
       });
 
-    console.log(postData);
+
 
     const idsend = toast.loading(
       <div className="flex items-center justify-around text-slate-950 font-semibold">
@@ -611,7 +611,7 @@ const ReorderTool = (props: Props) => {
       setSending(false);
     }
   };
-
+  console.log(table.getFilteredSelectedRowModel().rows);
   return (
     <div className="pr-5 pl-5 py-5 ">
       <div className="flex justify-between items-center p-5">
@@ -784,7 +784,7 @@ const ReorderTool = (props: Props) => {
         </div>
       </div>
       <div className=" p-1">
-        <ReorderDataTable useTable={table} supData={supplierData} />
+        <ReorderDataTable useTable={table} supData={supplierData} columns={columnDef} />
       </div>
 
       <div className="h-4" />

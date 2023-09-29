@@ -22,6 +22,7 @@ import React, {
   useState,
 } from "react";
 import { MdFilterList, MdFilterListOff } from "react-icons/md";
+import { RotatingLines } from "react-loader-spinner";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -107,12 +108,22 @@ const ExpandDataTable = <TData, TValue>({
               </Fragment>
             ))
           ) : (
-            <TableRow>
-              <TableCell>No Data</TableCell>
+            <TableRow >
+              <TableCell colSpan={columns.length} className="h-24">
+                <div className=" flex justify-center items-center p-3">
+                <RotatingLines
+                  strokeColor="green"
+                  strokeWidth="5"
+                  animationDuration="0.75"
+                  width="96"
+                  visible={true}
+                />
+                </div>
+               
+              </TableCell>
             </TableRow>
           )}
         </TableBody>
-        
       </Table>
     </div>
   );
@@ -131,7 +142,7 @@ function FilterVisible({
   const toggleChange = () => {
     setVisible((pre) => {
       if (pre === false) {
-        column.setFilterValue('');
+        column.setFilterValue("");
       }
       return !pre;
     });

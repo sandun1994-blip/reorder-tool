@@ -23,16 +23,19 @@ import React, {
 } from "react";
 import { MdFilterList, MdFilterListOff } from "react-icons/md";
 import ExpandComp from "../expandComp/components/expandComp";
+import { RotatingLines } from "react-loader-spinner";
 
 interface DataTableProps<TData, TValue> {
   useTable: TableType<any>;
   supData :any
+  columns: ColumnDef<TData, TValue>[];
   
 }
 
 const ReorderDataTable = <TData, TValue>({
   supData,
   useTable,
+  columns
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
   return (
@@ -46,7 +49,7 @@ const ReorderDataTable = <TData, TValue>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="text-center text-xs border px-2 py-2 border-gray-400"
+                    className="text-center text-xs border px-2 py-2 border-gray-400 text-black font-semibold   dark:text-white "
                   >
                     {header.isPlaceholder ? null : (
                       <>
@@ -119,7 +122,18 @@ const ReorderDataTable = <TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell>No Data</TableCell>
+               <TableCell colSpan={columns.length} className="h-24">
+                <div className=" flex justify-center items-center p-3">
+                <RotatingLines
+                  strokeColor="green"
+                  strokeWidth="5"
+                  animationDuration="0.75"
+                  width="96"
+                  visible={true}
+                />
+                </div>
+               
+              </TableCell>
             </TableRow>
           )}
         </TableBody>

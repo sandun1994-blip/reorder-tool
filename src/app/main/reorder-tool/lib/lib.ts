@@ -37,6 +37,21 @@ export const palletQty = (data: any) => {
   return data.calcReOrd.toFixed(0);
 };
 
+export const palletQtyTwo = (data: any, calcQty: number) => {
+  if (data.stockItem.xLeadTimeRest) {
+    const pQty = calcQty / data.stockItem.xLeadTimeRest;
+
+    const calcReOrd =
+      pQty <= 1
+        ? data.stockItem.xLeadTimeRest
+        : Math.ceil(pQty) * data.stockItem.xLeadTimeRest;
+
+    return calcReOrd;
+  }
+
+  return calcQty.toFixed(0);
+};
+
 export const processWorkorder = (data: any) => {
   if (
     data.stockItem.billomatHdr?.workOrder.filter((a: any) => {
@@ -49,37 +64,49 @@ export const processWorkorder = (data: any) => {
   return true;
 };
 
-const addSupNames = (data: any,supData:any) => {
-  let name: {label:string ,value:number}[] = [];
+const addSupNames = (data: any, supData: any) => {
+  let name: { label: string; value: number }[] = [];
   const dataArry = data.stockItem?.supplierStockItems;
+
   if (dataArry.length > 0) {
     dataArry.forEach((item: any) => {
-      if (!name.map(acc=>acc.value).includes(item.supplierAccount.accNo)) {
-        name.push({label:item.supplierAccount.name,value:item.supplierAccount.accNo});
+      if (!name.map((acc) => acc.value).includes(item.supplierAccount.accNo)) {
+        name.push({
+          label: item.supplierAccount.name,
+          value: item.supplierAccount.accNo,
+        });
       }
       if (item.tempLoc) {
-        name.push({label:item.tempLoc,value:item.supplierAccount.accNo});
+        name.push({ label: item.tempLoc, value: item.supplierAccount.accNo });
       }
     });
-  }
-  else {
-    name = supData
-  }
-
-  if (!name.map(acc=>acc.value).includes(data.accNo)) {
-    name.push({label:data.supplierName,value:data.accNo});
+  } else {
+    name = supData;
   }
 
-  if (!name.map(na=>na.label).includes("MALAGA WAREHOUSE") && data.centralLocation > 0) {
-    name.push({label:"MALAGA WAREHOUSE",value:-1});
+  if (!name.map((acc) => acc.value).includes(data.accNo)) {
+    name.push({ label: data.supplierName, value: data.accNo });
   }
 
-  if (!name.map(na=>na.label).includes("GYMPIE WAREHOUSE") && data.centralLocation > 0) {
-    name.push({label:"GYMPIE WAREHOUSE",value:-1});
+  if (
+    !name.map((na) => na.label).includes("MALAGA WAREHOUSE") &&
+    data.centralLocation > 0
+  ) {
+    name.push({ label: "MALAGA WAREHOUSE", value: -1 });
   }
 
-  if (!name.map(na=>na.label).includes("KALGOORLIE WAREHOUSE") && data.centralLocation > 0) {
-    name.push({label:"KALGOORLIE WAREHOUSE",value:-1});
+  if (
+    !name.map((na) => na.label).includes("GYMPIE WAREHOUSE") &&
+    data.centralLocation > 0
+  ) {
+    name.push({ label: "GYMPIE WAREHOUSE", value: -1 });
+  }
+
+  if (
+    !name.map((na) => na.label).includes("KALGOORLIE WAREHOUSE") &&
+    data.centralLocation > 0
+  ) {
+    name.push({ label: "KALGOORLIE WAREHOUSE", value: -1 });
   }
 
   return name;
@@ -87,13 +114,47 @@ const addSupNames = (data: any,supData:any) => {
 
 const getExclamation = (item: any) => {
   const visible =
-    item.inStockQTY + item.incommingty - item.salesOrdQTY <= item.minStock &&
+    item.inStockQTY + item.i - item.salesOrdQTY <= item.minStock &&
     item.fromLoc > 0;
 
   return visible;
 };
 
-export const getStockOrder = (item: any[],supData:any) => {
+const isCreateWorkOrder = (item: any) => {
+ 
+  
+  if (item.stockItem?.billomatHdr) {
+    
+    let condition = <any>[];
+const jk=[]
+    item.stockItem?.billomatHdr.billomatLines.filter((stk:any)=>stk.stockItem.stockRequirementTwo.length>0).forEach((data: any) => {
+      const obj1 = data.stockItem.stockRequirementTwo.filter(
+        (data1: any) => data1.locNo === item.stockLocation.locNo
+      );
+
+
+
+     jk.push(obj1)
+      
+      if (
+        obj1[0]?.incommingty + obj1[0]?.inStockQTY - obj1[0]?.salesOrdQTY <
+        data?.quantity * Number(item?.calcReOrd)
+      ) {
+        condition.push(false);
+      }
+
+      condition.push(true);
+    });
+
+console.log(jk);
+
+    return !condition.includes(false);
+  }
+
+  return false;
+};
+
+export const getStockOrder = (item: any[], supData: any) => {
   const stockOrder = item.map((e, i) => {
     return {
       id: i,
@@ -114,9 +175,10 @@ export const getStockOrder = (item: any[],supData:any) => {
       maxStock: e.maxStock,
       inStockQTY: e.inStockQTY,
       purchOrdQTY: e.purchOrdQTY,
-      incommingty: e.incommingty,
+      i: e.i,
       salesOrdQTY: e.salesOrdQTY,
-      name: {name:e.supplierName,accNo:e.supplierAccount.accNo},
+      name: { name: e.supplierName, accNo: e.supplierAccount.accNo },
+      sName: e.supplierName,
       sales1: e.sales1,
       sales2: e.sales2,
       sales3: e.sales3,
@@ -130,10 +192,73 @@ export const getStockOrder = (item: any[],supData:any) => {
       supplierCode: e.supplierCode,
       fromLoc: e.centralLocation,
       workOrder: processWorkorder(e),
-      nameArray: addSupNames(e,supData),
+      nameArray: addSupNames(e, supData),
       isExpand: e.stockItem.billomatHdr ? true : false,
+      isCreateWorkOrder: isCreateWorkOrder(e),
     };
   });
+
+  return stockOrder;
+};
+
+export const getStockOrderTwo = (item: any[], supData: any, mainItem: any) => {
+  const stockOrder = item
+    .filter((stk) => stk.stockItem.stockRequirementTwo.length > 0)
+    .map((e, i) => {
+      const obj = e.stockItem.stockRequirementTwo.filter((stk: any) => {
+        
+        
+        return (
+          stk.stockCode === e.stockCode &&
+          stk.locNo === mainItem.locationNumber 
+        );
+      });
+
+      const data = obj[0];
+
+      const reOrdQty = e?.quantity * Number(mainItem.calcReOrd);
+
+      const calcQty =
+        data?.incommingty + data?.inStockQTY - data?.salesOrdQTY >= reOrdQty
+          ? 0
+          : reOrdQty -
+            (data?.incommingty + data?.inStockQTY - data?.salesOrdQTY);
+
+      return {
+        id: i,
+        stockCode: e?.stockItem.stockCode,
+        branchName: data?.stockLocation.lName,
+        locationNumber: data?.stockLocation.locNo,
+        locationName: data?.stockLocation.lName,
+        locationAddress1: data?.stockLocation.deladdr1,
+        locationAddress2: data?.stockLocation.deladdr2,
+        locationAddress3: data?.stockLocation.deladdr3,
+        locationAddress4: data?.stockLocation.deladdr4,
+        supplierNumber: data?.supplierAccount.accNo,
+        supplierAccount: data?.supplierAccount,
+        description: e?.stockItem.description,
+        minStock: data?.minStock,
+        maxStock: data?.maxStock,
+        inStockQTY: data?.inStockQTY,
+        purchOrdQTY: data?.purchOrdQTY,
+        salesOrdQTY: data?.salesOrdQTY,
+        name: { name: data?.supplierName, accNo: data?.supplierAccount.accNo },
+        sName: data?.supplierName,
+        sales1: data?.sales1,
+        sales2: data?.sales2,
+        sales3: data?.sales3,
+        sales4: data?.sales4,
+        sales5: data?.sales5,
+        sales6: data?.sales6,
+        sales0: data?.sales0,
+        calcReOrd: palletQtyTwo(e, calcQty),
+        select: false,
+        stockItem: e?.stockItem,
+        supplierCode: data?.supplierCode,
+        fromLoc: data?.centralLocation,
+        nameArray: addSupNames(e, supData),
+      };
+    });
 
   return stockOrder;
 };
@@ -165,7 +290,7 @@ export const getWareHouseData = (data: any) => {
       return {
         ...data1,
         ...{
-          incommingty: data1?.incommingty,
+          i: data1?.i,
           chartData,
         },
       };
@@ -179,7 +304,7 @@ export const getWareHouseData = (data: any) => {
           return accumulator + currentValue;
         },
         0) > 0 ||
-        data.incommingty > 0 ||
+        data.i > 0 ||
         data.inStockQTY > 0
     );
 
@@ -191,10 +316,9 @@ export const getWareHouseData = (data: any) => {
         (d: any) =>
           d.stockLocation?.lName === obj.stockLocation?.lName &&
           d.inStockQTY === obj.inStockQTY &&
-          d.incommingty === obj.incommingty
+          d.i === obj.i
       );
-     
-      
+
       if (findValue === -1) {
         finalData.push(obj);
       }
@@ -202,117 +326,18 @@ export const getWareHouseData = (data: any) => {
   return finalData;
 };
 
-type Acc ={
-  value:number
-  label:string
-}
-export const getSupplier=(data:any)=>{
-  const supdata = <any>[]
-  let supNo = ''
-  data.forEach((elem:any) => {
-    supNo = elem.accNo
-    if (supNo && !supdata.map((acc:Acc)=>acc.value).includes(supNo)) {
-      supdata.push({value:elem.accNo,label:elem.name,supData:elem})
+type Acc = {
+  value: number;
+  label: string;
+};
+export const getSupplier = (data: any) => {
+  const supdata = <any>[];
+  let supNo = "";
+  data.forEach((elem: any) => {
+    supNo = elem.accNo;
+    if (supNo && !supdata.map((acc: Acc) => acc.value).includes(supNo)) {
+      supdata.push({ value: elem.accNo, label: elem.name, supData: elem });
     }
-  })
-  return supdata
-}
-
-export const  sendOrdersNew=async(selectData:any)=> {
-  const sendOrder = <any>[]
-
-  selectData.forEach((d) => {
-    if (d.select === true && d.calcReOrd > 0) {
-      // console.log(d);
-      //  console.log((d.select === true && d.calcReOrd > 0 && this.supplierStockItems.find(({supplierAccount,stockCode})=>supplierAccount.name.toLowerCase().trim()===d.name.toLowerCase().trim() && stockCode.toLowerCase().trim() === d.stockCode.toLowerCase().trim() )) )
-      if (
-        d.select === true &&
-        d.calcReOrd > 0 &&
-        this.supplierStockItems.find(
-          ({ supplierAccount, stockCode }) =>
-            supplierAccount.name.toLowerCase().trim() ===
-            d.name.toLowerCase().trim() &&
-            stockCode.toLowerCase().trim() ===
-            d.stockCode.toLowerCase().trim()
-        )
-      ) {
-        const data = this.supplierStockItems.find(
-          ({ supplierAccount, stockCode }) =>
-            supplierAccount.name.toLowerCase().trim() ===
-            d.name.toLowerCase().trim() &&
-            stockCode.toLowerCase().trim() ===
-            d.stockCode.toLowerCase().trim()
-        )
-        // console.log(data);
-        sendOrder.push({
-          ...d,
-          supplierAccount: data.supplierAccount,
-          supplierNumber: data.supplierAccount.id,
-          supplierCode: data.supplierCode
-        })
-      } else if (
-        this.supplierInfo.find(
-          (sup) =>
-            sup.name.toLowerCase().trim() === d.name.toLowerCase().trim()
-        )
-      ) {
-        const supData = this.supplierInfo.find(
-          (sup) =>
-            sup.name.toLowerCase().trim() === d.name.toLowerCase().trim()
-        )
-        sendOrder.push({
-          ...d,
-          supplierAccount: supData,
-          supplierNumber: supData.id
-        })
-      } else {
-        sendOrder.push(d)
-      }
-    }
-  })
-  this.loader = 'loading'
-
-  //   console.log(sendOrder);
-
-  const url = '' + process.env.apiBaseURL + 'sendorder'
-  const config = {
-    method: 'post',
-    url,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: this.$auth.strategy.token.get()
-    },
-    data: {
-      sendOrder,
-      user: this.loggedInUser,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.$auth.strategy.token.get()
-      }
-    }
-  }
-  await axios(config)
-    .then((response) => {
-      if (response.data.status) {
-        this.messageColor = 'success'
-        this.dialogMessage = 'Successfully Send'
-        setTimeout(() => {
-          this.dialogMessage = ''
-          this[this.loader] = false
-          this.loader = null
-          this.loading = false
-        }, 6000)
-      }
-    })
-    .catch((error) => {
-      console.log(error, 'some err')
-      this.dialogMessage = 'SERVER ERROR'
-      this.messageColor = 'error'
-      setTimeout(() => {
-        this.dialogMessage = ''
-        this[this.loader] = false
-        this.loader = null
-        this.loading = false
-      }, 6000)
-    })
-}
+  });
+  return supdata;
+};
