@@ -52,7 +52,7 @@ export const columnsExpand = [
 
       //  console.log('updated');
       const handle = (val: any) => {
-        table.options.meta?.updateData(row.index, id, val);
+        table.options.meta?.updateSelectValue(row.index, id, val);
       };
       
       

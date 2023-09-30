@@ -57,6 +57,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { sendWorkOrder } from "./lib/sendHooks";
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
@@ -66,6 +67,7 @@ declare module "@tanstack/table-core" {
     addRow: any;
     setwareHouseData: any;
     setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
+    updateSelectValue : (rowIndex: any, columnId: any, value: any) => void;
   }
 }
 
@@ -238,6 +240,21 @@ const ReorderTool = (props: Props) => {
       editedRows,
       setEditedRows,
       updateData: (rowIndex, columnId, value) => {
+        // Skip page index reset until after next rerender
+        skipAutoResetPageIndex();
+        setData((old) =>
+          old.map((row, index) => {
+            if (index === rowIndex) {
+              return {
+                ...old[rowIndex],
+                [columnId]: value
+              };
+            }
+            return row;
+          })
+        );
+      },
+      updateSelectValue:(rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
         setData((old) =>
@@ -611,6 +628,15 @@ const ReorderTool = (props: Props) => {
       setSending(false);
     }
   };
+
+
+ const wo=()=>{
+  sendWorkOrder (table,toast,setSending,supplierData )
+ }
+
+
+
+
   console.log(table.getFilteredSelectedRowModel().rows);
   return (
     <div className="pr-5 pl-5 py-5 ">
@@ -729,7 +755,7 @@ const ReorderTool = (props: Props) => {
                 <DropdownMenuItem>
                   <Button
                     variant={"outline"}
-                    onClick={() => {}}
+                    onClick={wo}
                     className="rounded-lg w-40 text-left"
                   >
                     Work Order

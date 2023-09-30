@@ -126,15 +126,13 @@ const isCreateWorkOrder = (item: any) => {
   if (item.stockItem?.billomatHdr) {
     
     let condition = <any>[];
-const jk=[]
+// const jk=[]
     item.stockItem?.billomatHdr.billomatLines.filter((stk:any)=>stk.stockItem.stockRequirementTwo.length>0).forEach((data: any) => {
       const obj1 = data.stockItem.stockRequirementTwo.filter(
         (data1: any) => data1.locNo === item.stockLocation.locNo
       );
 
-
-
-     jk.push(obj1)
+   //  jk.push(obj1)
       
       if (
         obj1[0]?.incommingty + obj1[0]?.inStockQTY - obj1[0]?.salesOrdQTY <
@@ -146,7 +144,7 @@ const jk=[]
       condition.push(true);
     });
 
-console.log(jk);
+// console.log(jk);
 
     return !condition.includes(false);
   }

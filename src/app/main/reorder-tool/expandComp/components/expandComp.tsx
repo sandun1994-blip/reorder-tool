@@ -63,6 +63,7 @@ declare module "@tanstack/table-core" {
     addRow: any;
     setwareHouseData: any;
     setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
+    updateSelectValue : (rowIndex: any, columnId: any, value: any) => void;
   }
 }
 
@@ -229,6 +230,21 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
         // Skip page index reset until after next rerender
         console.log(rowIndex, columnId, value);
         
+        skipAutoResetPageIndex();
+        setData((old) =>
+          old.map((row, index) => {
+            if (index === rowIndex) {
+              return {
+                ...old[rowIndex],
+                [columnId]: value.label,name:value
+              };
+            }
+            return row;
+          })
+        );
+      },
+      updateSelectValue:(rowIndex, columnId, value) => {
+        // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
         setData((old) =>
           old.map((row, index) => {
