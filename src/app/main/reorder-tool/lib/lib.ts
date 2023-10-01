@@ -121,30 +121,29 @@ const getExclamation = (item: any) => {
 };
 
 const isCreateWorkOrder = (item: any) => {
- 
-  
   if (item.stockItem?.billomatHdr) {
-    
     let condition = <any>[];
-// const jk=[]
-    item.stockItem?.billomatHdr.billomatLines.filter((stk:any)=>stk.stockItem.stockRequirementTwo.length>0).forEach((data: any) => {
-      const obj1 = data.stockItem.stockRequirementTwo.filter(
-        (data1: any) => data1.locNo === item.stockLocation.locNo
-      );
+    // const jk=[]
+    item.stockItem?.billomatHdr.billomatLines
+      .filter((stk: any) => stk.stockItem.stockRequirementTwo.length > 0)
+      .forEach((data: any) => {
+        const obj1 = data.stockItem.stockRequirementTwo.filter(
+          (data1: any) => data1.locNo === item.stockLocation.locNo
+        );
 
-   //  jk.push(obj1)
-      
-      if (
-        obj1[0]?.incommingty + obj1[0]?.inStockQTY - obj1[0]?.salesOrdQTY <
-        data?.quantity * Number(item?.calcReOrd)
-      ) {
-        condition.push(false);
-      }
+        //  jk.push(obj1)
 
-      condition.push(true);
-    });
+        if (
+          obj1[0]?.incommingty + obj1[0]?.inStockQTY - obj1[0]?.salesOrdQTY <
+          data?.quantity * Number(item?.calcReOrd)
+        ) {
+          condition.push(false);
+        }
 
-// console.log(jk);
+        condition.push(true);
+      });
+
+    // console.log(jk);
 
     return !condition.includes(false);
   }
@@ -152,49 +151,63 @@ const isCreateWorkOrder = (item: any) => {
   return false;
 };
 
-export const getStockOrder = (item: any[], supData: any) => {
-  const stockOrder = item.map((e, i) => {
-    return {
-      id: i,
-      exclamationMark: getExclamation(e),
-      stockCode: e.stockItem.stockCode,
-      billomatHdr: e.stockItem?.billomatHdr,
-      branchName: e.stockLocation.lName,
-      locationNumber: e.stockLocation.locNo,
-      locationName: e.stockLocation.lName,
-      locationAddress1: e.stockLocation.deladdr1,
-      locationAddress2: e.stockLocation.deladdr2,
-      locationAddress3: e.stockLocation.deladdr3,
-      locationAddress4: e.stockLocation.deladdr4,
-      supplierNumber: e.supplierAccount.accNo,
-      supplierAccount: e.supplierAccount,
-      description: e.stockItem.description,
-      minStock: e.minStock,
-      maxStock: e.maxStock,
-      inStockQTY: e.inStockQTY,
-      purchOrdQTY: e.purchOrdQTY,
-      i: e.i,
-      salesOrdQTY: e.salesOrdQTY,
-      name: { name: e.supplierName, accNo: e.supplierAccount.accNo },
-      sName: e.supplierName,
-      sales1: e.sales1,
-      sales2: e.sales2,
-      sales3: e.sales3,
-      sales4: e.sales4,
-      sales5: e.sales5,
-      sales6: e.sales6,
-      sales0: e.sales0,
-      calcReOrd: palletQty(e),
-      select: false,
-      stockItem: e.stockItem,
-      supplierCode: e.supplierCode,
-      fromLoc: e.centralLocation,
-      workOrder: processWorkorder(e),
-      nameArray: addSupNames(e, supData),
-      isExpand: e.stockItem.billomatHdr ? true : false,
-      isCreateWorkOrder: isCreateWorkOrder(e),
-    };
-  });
+export const getStockOrder = (item: any[], supData: any, pauseItems: any) => {
+  const stockOrder = item
+    .filter(
+      (item1) =>
+       {   
+        return (item1.calcReOrd > 0 &&
+        !pauseItems.includes(
+          `${item1.stockItem.stockCode?.trim()}` +
+            "-" +
+            `${item1.stockLocation.locNo}` +
+            "-" +
+            `${item1.supplierAccount.accNo}`)
+        )}
+    )
+    .map((e, i) => {
+      return {
+        id: i,
+        exclamationMark: getExclamation(e),
+        stockCode: e.stockItem.stockCode,
+        billomatHdr: e.stockItem?.billomatHdr,
+        branchName: e.stockLocation.lName,
+        locationNumber: e.stockLocation.locNo,
+        locationName: e.stockLocation.lName,
+        locationAddress1: e.stockLocation.deladdr1,
+        locationAddress2: e.stockLocation.deladdr2,
+        locationAddress3: e.stockLocation.deladdr3,
+        locationAddress4: e.stockLocation.deladdr4,
+        supplierNumber: e.supplierAccount.accNo,
+        supplierAccount: e.supplierAccount,
+        description: e.stockItem.description,
+        minStock: e.minStock,
+        maxStock: e.maxStock,
+        inStockQTY: e.inStockQTY,
+        incommingty: e?.incommingty,
+        purchOrdQTY: e.purchOrdQTY,
+        i: e.i,
+        salesOrdQTY: e.salesOrdQTY,
+        name: { name: e.supplierName, accNo: e.supplierAccount.accNo },
+        sName: e.supplierName,
+        sales1: e.sales1,
+        sales2: e.sales2,
+        sales3: e.sales3,
+        sales4: e.sales4,
+        sales5: e.sales5,
+        sales6: e.sales6,
+        sales0: e.sales0,
+        calcReOrd: palletQty(e),
+        select: false,
+        stockItem: e.stockItem,
+        supplierCode: e.supplierCode,
+        fromLoc: e.centralLocation,
+        workOrder: processWorkorder(e),
+        nameArray: addSupNames(e, supData),
+        isExpand: e.stockItem.billomatHdr ? true : false,
+        isCreateWorkOrder: isCreateWorkOrder(e),
+      };
+    });
 
   return stockOrder;
 };
@@ -204,11 +217,8 @@ export const getStockOrderTwo = (item: any[], supData: any, mainItem: any) => {
     .filter((stk) => stk.stockItem.stockRequirementTwo.length > 0)
     .map((e, i) => {
       const obj = e.stockItem.stockRequirementTwo.filter((stk: any) => {
-        
-        
         return (
-          stk.stockCode === e.stockCode &&
-          stk.locNo === mainItem.locationNumber 
+          stk.stockCode === e.stockCode && stk.locNo === mainItem.locationNumber
         );
       });
 
@@ -242,6 +252,7 @@ export const getStockOrderTwo = (item: any[], supData: any, mainItem: any) => {
         salesOrdQTY: data?.salesOrdQTY,
         name: { name: data?.supplierName, accNo: data?.supplierAccount.accNo },
         sName: data?.supplierName,
+        incommingty: data?.incommingty,
         sales1: data?.sales1,
         sales2: data?.sales2,
         sales3: data?.sales3,
@@ -338,4 +349,13 @@ export const getSupplier = (data: any) => {
     }
   });
   return supdata;
+};
+
+export const getCombineCode = (data: any) => {
+  const combineCode = <any>[];
+  data.forEach((element: any) => {
+    combineCode.push(element.combineCode.trim());
+  });
+
+  return combineCode;
 };

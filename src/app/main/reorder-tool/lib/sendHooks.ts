@@ -31,32 +31,27 @@ export const sendWorkOrder = async (
   }
 
 
-//   if (
-//     orderData.filter((item: any) =>   !item.original.billomatHdr)
-//       .length > 0 
-//   ) {
-//     toast.warning("Selected Item isn't Workorder", {
-//       position: "top-center",
-//       theme: "colored",
-//     });
-//     return;
-//   }
+  if (
+    orderData.filter((item: any) =>   !item.original.billomatHdr)
+      .length > 0 
+  ) {
+    toast.warning("Selected Item isn't Workorder", {
+      position: "top-center",
+      theme: "colored",
+    });
+    return;
+  }
 
-//   if (
-//     orderData.filter((item: any) => item.original.isCreateWorkOrder===false )
-//       .length > 0 
-//   ) {
-//     toast.warning("There is no enough item built  WO ", {
-//       position: "top-center",
-//       theme: "colored",
-//     });
-//     return;
-//   }
-
-
-
-
-
+  if (
+    orderData.filter((item: any) => item.original.isCreateWorkOrder===false )
+      .length > 0 
+  ) {
+    toast.warning("There is no enough item built  WO ", {
+      position: "top-center",
+      theme: "colored",
+    });
+    return;
+  }
 
 
   setSending(true);
@@ -69,7 +64,7 @@ export const sendWorkOrder = async (
         prodQty: Number(item2.calcReOrd),
         prodLocNo: item2.locationNumber}))
 
-  console.log('wooooooo');
+
 
   const id = toast.loading(LoaderToast({}), { icon: false });
 
@@ -104,7 +99,7 @@ console.log(res.data);
         
       setTimeout(() => {
         if (element.status === "fulfilled") {
-          toast(`WO ${element.value} Created`, {
+          toast(`WO ${element.value.seqNo} Created`, {
             position: "top-right",
             autoClose: 2000 * time,
             hideProgressBar: false,
@@ -135,9 +130,7 @@ console.log(res.data);
       value: item.value,
     }));
     for (let index = 0; index < valu.length; index++) {
-      const element = valu[index];
-      console.log(element);
-      
+      const element = valu[index];      
       popupTost(index + 1, element);
     }
     console.log(res);

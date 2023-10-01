@@ -64,6 +64,7 @@ declare module "@tanstack/table-core" {
     setwareHouseData: any;
     setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
     updateSelectValue : (rowIndex: any, columnId: any, value: any) => void;
+    removeRow :  (rowIndex: any, columnId: any) => void;
   }
 }
 
@@ -139,7 +140,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
     [arrayOfLocations]
   );
 
-  const columnDef = useMemo(() => {
+  const columnDef:any = useMemo(() => {
     return columnsExpand;
   }, []);
 
@@ -258,6 +259,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
           })
         );
       },
+      removeRow:()=>{},
       addRow: () => {
         const newRow: any = {
           studentId: Math.floor(Math.random() * 10000),

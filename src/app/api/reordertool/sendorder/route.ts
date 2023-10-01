@@ -22,11 +22,14 @@ export async function POST(request: NextRequest) {
       data: { data: body, user: user.name },
     };
 
-    const sendOrder = await axios(config);
+    const insertItem = await axios(config);
 
-    return NextResponse.json(sendOrder.data);
+    return NextResponse.json(insertItem.data);
   } catch (error) {
     
     return new NextResponse("Error", { status: 500 });
   }
 }
+
+
+

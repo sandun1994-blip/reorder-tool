@@ -22,7 +22,7 @@ import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { columns } from "./components/columnsReorder";
 import axios from "axios";
 import SelectComp from "./components/SelectComp";
-import { getLocations, getStockOrder, getSupplier } from "./lib/lib";
+import { getCombineCode, getLocations, getStockOrder, getSupplier } from "./lib/lib";
 
 import ReorderDataTable from "./components/data-table";
 import { Input } from "@/components/ui/input";
@@ -58,16 +58,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { sendWorkOrder } from "./lib/sendHooks";
+import SnoozeItems from "./components/snoozeItems";
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
-    editedRows: any;
-    updateData: (rowIndex: any, columnId: any, value: any) => void;
+    editedRows: any|null;
+    updateData: (rowIndex: any, columnId: any, value: any) => void ;
     setEditedRows: any;
     addRow: any;
     setwareHouseData: any;
     setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
     updateSelectValue : (rowIndex: any, columnId: any, value: any) => void;
+    removeRow :  (rowIndex: any, columnId: any) => void ;
   }
 }
 
@@ -130,6 +132,8 @@ const ReorderTool = (props: Props) => {
   const [wareHouseData, setwareHouseData] = useState({});
   const [chartModal, setChartModal] = useState(false);
   const [sending, setSending] = useState(false);
+  const [pauseItems,setPauseItems] =useState([])
+  const [snoozeVisible,setSnoozeVisible] =useState(false)
 
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
@@ -148,7 +152,7 @@ const ReorderTool = (props: Props) => {
   }, [searchValue]);
 
   useEffect(() => {
-    const getData = async (supData: any) => {
+    const getData = async (supData: any,snoozeItem:any) => {
       const url = "/api/stktool";
       const config = {
         method: "get",
@@ -163,11 +167,13 @@ const ReorderTool = (props: Props) => {
           value: item.value,
           label: item.label,
         }));
-        const stkData = getStockOrder(res.data.slice(0, 1000), reduceSupData);
+        const pauseItems = getCombineCode(snoozeItem)
+        const stkData = getStockOrder(res.data, reduceSupData,pauseItems);
 
         setData(stkData);
         setSupplierData(supData);
         setArrayOfLocations(getLocations(res.data));
+        setPauseItems(snoozeItem)
       } catch (error) {
         console.log(error);
       }
@@ -192,10 +198,31 @@ const ReorderTool = (props: Props) => {
       }
     };
 
+
+    const getPauseItems = async () => {
+      const url = "/api/reordertool/pauseItem";
+      const config = {
+        method: "get",
+        url,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      try {
+        const res = await axios(config);
+        // const pauseItems = getCombineCode(res.data) 
+
+        return res.data;
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
     const getAllData = async () => {
       try {
+        const pauseItems =await getPauseItems()    
         const supData = await getSupplierData();
-        const allData = await getData(supData);
+        const allData = await getData(supData,pauseItems);
       } catch (error) {
         console.log(error);
       }
@@ -268,6 +295,14 @@ const ReorderTool = (props: Props) => {
             return row;
           })
         );
+      },
+      removeRow:(rowIndex, columnId) => {
+        skipAutoResetPageIndex();
+        setData((old) =>
+          old.filter((row, index) => index != rowIndex)
+        );
+
+        table.resetRowSelection()
       },
       addRow: () => {
         const newRow: any = {
@@ -558,6 +593,7 @@ const ReorderTool = (props: Props) => {
       };
 
       const res = await axios(config);
+console.log(res);
 
       toast.update(id, {
         render: "Created",
@@ -601,10 +637,13 @@ const ReorderTool = (props: Props) => {
           }
         }, 1000 * time);
       };
+  
       const valu = res.data.map((item: any) => ({
-        ...item,
-        value: item.value.seqNo,
+        status:item.status,
+        value: item.value.seqNo
       }));
+     
+      
       for (let index = 0; index < valu.length; index++) {
         const element = valu[index];
         popupTost(index + 1, element);
@@ -641,6 +680,7 @@ const ReorderTool = (props: Props) => {
   return (
     <div className="pr-5 pl-5 py-5 ">
       <div className="flex justify-between items-center p-5">
+        <SnoozeItems details={pauseItems} setSnoozeVisible={setSnoozeVisible} snoozeVisible={snoozeVisible}/>
         <WarehouseComp
           chartModal={chartModal}
           setChartModal={setChartModal}
@@ -765,7 +805,7 @@ const ReorderTool = (props: Props) => {
                 <DropdownMenuItem>
                   <Button
                     variant={"outline"}
-                    onClick={() => {}}
+                    onClick={() => {setSnoozeVisible(true)}}
                     className="rounded-lg w-40"
                   >
                     Snoozed Items

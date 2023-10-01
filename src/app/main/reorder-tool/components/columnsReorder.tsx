@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
-import { FcExpand, FcHighPriority } from "react-icons/fc";
+import { FaExclamation } from "react-icons/fa";
 import {
   Column,
   ColumnDef,
@@ -12,8 +12,29 @@ import {
 import React, { HTMLProps, useEffect, useState } from "react";
 import ReactSelect from "react-select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MdExpandLess, MdExpandMore, MdFilterList, MdFilterListOff } from "react-icons/md";
+import {
+  MdExpandLess,
+  MdExpandMore,
+  MdFilterList,
+  MdFilterListOff,
+} from "react-icons/md";
+import { BsPauseCircle } from "react-icons/bs";
+import { ImCheckmark } from "react-icons/im";
+
 import { Button } from "@/components/ui/button";
+import axios from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "react-toastify";
 
 declare module "@tanstack/react-table" {
   //   interface TableMeta<TData extends RowData> {
@@ -27,12 +48,15 @@ declare module "@tanstack/react-table" {
 const columnHelper = createColumnHelper<any>();
 
 export const columns = [
-  
   columnHelper.accessor("fromLoc", {
     header: () => "",
     cell: (info) => (
       <div className=" flex items-center justify-center">
-        {info.getValue() ? <FcHighPriority size={25} /> : " "}
+        {info.getValue() ? (
+          <FaExclamation size={20} className="text-red-500" />
+        ) : (
+          " "
+        )}
       </div>
     ),
     enableColumnFilter: false,
@@ -53,25 +77,24 @@ export const columns = [
         value: row.original?.name.accNo,
         label: row.original?.name.name,
       });
-      
+
       // When the input is blurred, we'll call our table meta's updateData function
 
       // If the initialValue is changed external, sync it up with our state
       React.useEffect(() => {
-       setOption({value: row.original?.name.accNo,label: row.original?.name.name});
+        setOption({
+          value: row.original?.name.accNo,
+          label: row.original?.name.name,
+        });
       }, [row.original?.name.accNo, row.original?.name.name]);
 
       //  console.log('updated');
       const handle = (val: any) => {
         table.options.meta?.updateSelectValue(row.index, id, val);
       };
-      
-      
 
-      const options =
-        row.original.nameArray &&
-        row.original.nameArray
-        
+      const options = row.original.nameArray && row.original.nameArray;
+
       return (
         <>
           <div style={{ width: "200px" }}>
@@ -130,7 +153,11 @@ export const columns = [
             style: { cursor: "pointer" },
           }}
         >
-          {row.getIsExpanded() ? <MdExpandLess  size={25} color={'red'}/> : <MdExpandMore size={25} color={'red'}/>}
+          {row.getIsExpanded() ? (
+            <MdExpandLess size={25} color={"red"} />
+          ) : (
+            <MdExpandMore size={25} color={"red"} />
+          )}
         </button>
       ) : (
         ""
@@ -234,6 +261,117 @@ export const columns = [
   }),
   columnHelper.accessor("pause", {
     header: "Pause",
+    cell: ({ getValue, row: { index, original }, column: { id }, table }) => {
+
+const [visible,setVisible] =useState(false)
+const [day,setDay] =useState(7)
+
+
+
+      const today = new Date();
+      const pasueItem = {
+        stockCode: original.stockCode.trim(),
+        accNo: original.supplierNumber,
+        locNo: original.locationNumber,
+        insertDate: today,
+        hiddenDay: day,
+        combineCode: (
+          `${original.stockCode}` +
+          "-" +
+          `${original.locationNumber}` +
+          "-" +
+          `${original.supplierNumber}`
+        ).trim(),
+      };
+
+      const postData = async () => {
+        const postData = { ...pasueItem };
+
+      
+
+        const config = {
+          method: "post",
+          url: "/api/reordertool/pauseItem",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: postData,
+        };
+        const res = await axios(config);
+        return res.data;
+      };
+
+      const handleClick = async () => {
+        try {
+          await postData();
+          toast.success('Sucess', {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            });
+
+            table.options.meta?.removeRow(index, id);
+            setVisible(false)
+        } catch (error) {
+          toast.error('Error', {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            });
+           console.log(error);
+        }
+      };
+      return (
+        <div className=" flex items-center justify-center">
+          <Dialog open={visible} onOpenChange={setVisible}>
+            <DialogTrigger asChild>
+              <Button variant="outline"><BsPauseCircle
+            size={25}
+            className="cursor-pointer"
+            
+          /></Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Snoozed Item</DialogTitle>
+                <DialogDescription>
+                How many day do you want to hidden this item from today?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    No of Days
+                  </Label>
+                  <Input
+                    id="day"
+                    className="col-span-3"
+                    type="number"
+                    onChange={(e)=>setDay(Number(e.target.value))}
+                    value={day}
+                    min={1}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleClick} >Confirm</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+        </div>
+      );
+    },
     enableColumnFilter: false,
     footer: (info) => info.column.id,
   }),
@@ -241,7 +379,11 @@ export const columns = [
     header: () => "WO",
     cell: (info) => (
       <div className=" flex items-center justify-center">
-        {info.getValue() ? <FcHighPriority size={25} /> : " "}
+        {info.getValue() ? (
+          <ImCheckmark size={20} className="text-green-500" />
+        ) : (
+          " "
+        )}
       </div>
     ),
     enableColumnFilter: false,
