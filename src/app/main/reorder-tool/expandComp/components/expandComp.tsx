@@ -55,18 +55,18 @@ import { getLocations, getStockOrder, getStockOrderTwo, getSupplier } from "../.
 import { downloadToExcel } from "../../lib/xlsx";
 import ExpandDataTable from "./expandTable";
 
-declare module "@tanstack/table-core" {
-  interface TableMeta<TData extends RowData> {
-    editedRows: any;
-    updateData: (rowIndex: any, columnId: any, value: any) => void;
-    setEditedRows: any;
-    addRow: any;
-    setwareHouseData: any;
-    setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
-    updateSelectValue : (rowIndex: any, columnId: any, value: any) => void;
-    removeRow :  (rowIndex: any, columnId: any) => void;
-  }
-}
+// declare module "@tanstack/table-core" {
+//   interface TableMeta<TData extends RowData> {
+//     editedRows: any;
+//     updateData: (rowIndex: any, columnId: any, value: any) => void;
+//     setEditedRows: any;
+//     addRow: any;
+//     setwareHouseData: any;
+//     setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
+//     updateSelectValue : (rowIndex: any, columnId: any, value: any) => void;
+//     removeRow :  (rowIndex: any, columnId: any) => void;
+//   }
+// }
 
 type Props = {
     supData:any 

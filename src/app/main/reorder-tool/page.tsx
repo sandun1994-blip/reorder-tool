@@ -22,7 +22,12 @@ import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { columns } from "./components/columnsReorder";
 import axios from "axios";
 import SelectComp from "./components/SelectComp";
-import { getCombineCode, getLocations, getStockOrder, getSupplier } from "./lib/lib";
+import {
+  getCombineCode,
+  getLocations,
+  getStockOrder,
+  getSupplier,
+} from "./lib/lib";
 
 import ReorderDataTable from "./components/data-table";
 import { Input } from "@/components/ui/input";
@@ -57,19 +62,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { sendWorkOrder } from "./lib/sendHooks";
+import { sendOrder, sendTransfers, sendWorkOrder } from "./lib/sendHooks";
 import SnoozeItems from "./components/snoozeItems";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
-    editedRows: any|null;
-    updateData: (rowIndex: any, columnId: any, value: any) => void ;
+    editedRows: any | null;
+    updateData: (rowIndex: any, columnId: any, value: any) => void;
     setEditedRows: any;
     addRow: any;
     setwareHouseData: any;
     setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
-    updateSelectValue : (rowIndex: any, columnId: any, value: any) => void;
-    removeRow :  (rowIndex: any, columnId: any) => void ;
+    updateSelectValue: (rowIndex: any, columnId: any, value: any) => void;
+    removeRow: (rowIndex: any, columnId: any) => void;
+    setSnoozeRemoveData: any;
   }
 }
 
@@ -92,6 +100,8 @@ function useSkipper() {
 }
 
 const ReorderTool = (props: Props) => {
+  const router = useRouter();
+
   const globalFns: FilterFn<any> = (
     row,
     columnId: string,
@@ -132,8 +142,9 @@ const ReorderTool = (props: Props) => {
   const [wareHouseData, setwareHouseData] = useState({});
   const [chartModal, setChartModal] = useState(false);
   const [sending, setSending] = useState(false);
-  const [pauseItems,setPauseItems] =useState([])
-  const [snoozeVisible,setSnoozeVisible] =useState(false)
+  const [pauseItems, setPauseItems] = useState([]);
+  const [snoozeVisible, setSnoozeVisible] = useState(false);
+  const [soonzeRemoveData, setSnoozeRemoveData] = useState([]);
 
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
@@ -145,14 +156,13 @@ const ReorderTool = (props: Props) => {
   }, []);
 
   useEffect(() => {
-    //    table.getAllColumns().filter((col) => col.id === 'stockCode')[0].setFilterValue(searchValue);
-    //console.log(table.getGlobalAutoFilterFn());
-
     setGlobalFilter(searchValue);
   }, [searchValue]);
 
   useEffect(() => {
-    const getData = async (supData: any,snoozeItem:any) => {
+    const getData = async (supData: any, snoozeItem: any) => {
+      console.log("initial");
+
       const url = "/api/stktool";
       const config = {
         method: "get",
@@ -167,13 +177,13 @@ const ReorderTool = (props: Props) => {
           value: item.value,
           label: item.label,
         }));
-        const pauseItems = getCombineCode(snoozeItem)
-        const stkData = getStockOrder(res.data, reduceSupData,pauseItems);
+        const pauseItems = getCombineCode(snoozeItem);
+        const stkData = getStockOrder(res.data, reduceSupData, pauseItems);
 
         setData(stkData);
         setSupplierData(supData);
         setArrayOfLocations(getLocations(res.data));
-        setPauseItems(snoozeItem)
+        setPauseItems(snoozeItem);
       } catch (error) {
         console.log(error);
       }
@@ -198,7 +208,6 @@ const ReorderTool = (props: Props) => {
       }
     };
 
-
     const getPauseItems = async () => {
       const url = "/api/reordertool/pauseItem";
       const config = {
@@ -210,7 +219,6 @@ const ReorderTool = (props: Props) => {
       };
       try {
         const res = await axios(config);
-        // const pauseItems = getCombineCode(res.data) 
 
         return res.data;
       } catch (error) {
@@ -220,9 +228,9 @@ const ReorderTool = (props: Props) => {
 
     const getAllData = async () => {
       try {
-        const pauseItems =await getPauseItems()    
+        const pauseItems = await getPauseItems();
         const supData = await getSupplierData();
-        const allData = await getData(supData,pauseItems);
+        const allData = await getData(supData, pauseItems);
       } catch (error) {
         console.log(error);
       }
@@ -250,7 +258,7 @@ const ReorderTool = (props: Props) => {
       columnFilters,
       columnVisibility,
     },
-    enableRowSelection: true, //enable row selection for all rows
+    enableRowSelection: true,
     // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
     onRowSelectionChange: setRowSelection,
     getRowCanExpand: () => true,
@@ -265,6 +273,7 @@ const ReorderTool = (props: Props) => {
     globalFilterFn: globalFns,
     meta: {
       editedRows,
+      setSnoozeRemoveData,
       setEditedRows,
       updateData: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
@@ -274,14 +283,14 @@ const ReorderTool = (props: Props) => {
             if (index === rowIndex) {
               return {
                 ...old[rowIndex],
-                [columnId]: value
+                [columnId]: value,
               };
             }
             return row;
           })
         );
       },
-      updateSelectValue:(rowIndex, columnId, value) => {
+      updateSelectValue: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
         setData((old) =>
@@ -289,20 +298,19 @@ const ReorderTool = (props: Props) => {
             if (index === rowIndex) {
               return {
                 ...old[rowIndex],
-                [columnId]: value.label,name:value
+                [columnId]: value.label,
+                name: value,
               };
             }
             return row;
           })
         );
       },
-      removeRow:(rowIndex, columnId) => {
+      removeRow: (rowIndex, columnId) => {
         skipAutoResetPageIndex();
-        setData((old) =>
-          old.filter((row, index) => index != rowIndex)
-        );
+        setData((old) => old.filter((row, index) => index != rowIndex));
 
-        table.resetRowSelection()
+        table.resetRowSelection();
       },
       addRow: () => {
         const newRow: any = {
@@ -338,353 +346,33 @@ const ReorderTool = (props: Props) => {
     //  console.log(table.getFilteredRowModel());
   }, [options, optionsTwo]);
 
-  const sendOrder = async () => {
-    const orderData = table.getFilteredSelectedRowModel().rows;
-    console.log("okk");
+  // const soonzedepency =useMemo(()=>{
+  //   return soonzeRemoveData
+  // },[soonzeRemoveData])
 
-    if (orderData.length === 0) {
-      toast.warning("Select At Least One Order", {
-        position: "top-center",
-        theme: "colored",
-      });
-      return;
-    }
-    if (
-      orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length >
-      0
-    ) {
-      toast.warning("Reorder Value Should Be Greather Than 0", {
-        position: "top-center",
-        theme: "colored",
-      });
-      return;
-    }
+  // useEffect(()=>{
+  //   console.log(soonzeRemoveData,'soonzeRemoveData');
+  // },[soonzedepency])
 
-    setSending(true);
-    const postData = orderData
-      .map((item) => item.original)
-      .filter((item1) => item1.calcReOrd > 0)
-      .map((subItem: any) => {
-        const isChectItemWithCode = subItem.stockItem.supplierStockItems.find(
-          ({ supplierAccount, stockCode }: any) =>
-            supplierAccount.accNo === subItem.name.accNo &&
-            stockCode === subItem.stockCode
-        );
-
-        if (isChectItemWithCode) {
-          return {
-            ...subItem,
-            supplierAccount: isChectItemWithCode.supplierAccount,
-            supplierNumber: isChectItemWithCode.supplierAccount.accNo,
-            supplierCode: isChectItemWithCode.supplierCode,
-          };
-        } else if (
-          supplierData.find((sup: any) => {
-            return sup.supData.accNo === subItem.name.accNo;
-          })
-        ) {
-          const supAccont: any = supplierData.find((sup: any) => {
-            return sup.supData.accNo === subItem.name.accNo;
-          });
-
-          if (supAccont) {
-            return {
-              ...subItem,
-              supplierAccount: supAccont.supData,
-              supplierNumber: supAccont.supData.accNo,
-            };
-          }
-          return subItem;
-        } else {
-          return subItem;
-        }
-      });
-
-
-
-    const idsend = toast.loading(
-      <div className="flex items-center justify-around text-slate-950 font-semibold">
-        <Puff
-          height="50"
-          width="50"
-          radius={1}
-          color="#4fa94d"
-          ariaLabel="puff-loading"
-          wrapperStyle={{}}
-          wrapperClass=""
-          visible={true}
-        />
-        Sending........
-      </div>,
-      { icon: false }
-    );
-
-    try {
-      const config = {
-        method: "post",
-        url: "/api/reordertool/sendorder",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: postData,
-      };
-
-      const res = await axios(config);
-
-      console.log(res);
-
-      toast.update(idsend, {
-        render: "Created",
-        isLoading: false,
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        type: "success",
-      });
-      // console.log(res);
-
-      const popupTost = (time: number, element: any) => {
-        setTimeout(() => {
-          if (element.status === "fulfilled") {
-            toast(`PO ${element.value} Created`, {
-              position: "top-right",
-              autoClose: 2000 * time,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              type: "success",
-            });
-          } else {
-            toast("Order is not created", {
-              position: "top-right",
-              autoClose: 2000 * time,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              type: "error",
-            });
-          }
-        }, 1000 * time);
-      };
-      const valu = res.data.map((item: any) => ({
-        ...item,
-        value: item.value.poNumber,
-      }));
-      for (let index = 0; index < valu.length; index++) {
-        const element = valu[index];
-        popupTost(index + 1, element);
-      }
-      setSending(false);
-    } catch (error) {
-      toast.update(idsend, {
-        render: "Internal Error",
-        isLoading: false,
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        type: "error",
-      });
-      console.log(error);
-      setSending(false);
-    }
-  };
-
-  const sendTransfers = async () => {
-    const orderData = table.getFilteredSelectedRowModel().rows;
-
-    if (orderData.length === 0) {
-      toast.warning("Select At Least One Order", {
-        position: "top-center",
-        theme: "colored",
-      });
-      return;
-    }
-    if (
-      orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length >
-      0
-    ) {
-      toast.warning("Reorder Value Should Be Greather Than 0", {
-        position: "top-center",
-        theme: "colored",
-      });
-      return;
-    }
-    setSending(true);
-    const postData = orderData
-      .map((item) => item.original)
-      .filter((item1) => item1.calcReOrd > 0)
-      .map((subItem: any) => {
-        const isChectItemWithCode = subItem.stockItem.supplierStockItems.find(
-          ({ supplierAccount, stockCode }: any) =>
-            supplierAccount.accNo === subItem.name.accNo &&
-            stockCode === subItem.stockCode
-        );
-
-        if (isChectItemWithCode) {
-          return {
-            ...subItem,
-            supplierAccount: isChectItemWithCode.supplierAccount,
-            supplierNumber: isChectItemWithCode.supplierAccount.accNo,
-            supplierCode: isChectItemWithCode.supplierCode,
-          };
-        } else if (
-          supplierData.find((sup: any) => {
-            return sup.supData.accNo === subItem.name.accNo;
-          })
-        ) {
-          const supAccont: any = supplierData.find((sup: any) => {
-            return sup.supData.accNo === subItem.name.accNo;
-          });
-
-          if (supAccont) {
-            return {
-              ...subItem,
-              supplierAccount: supAccont.supData,
-              supplierNumber: supAccont.supData.accNo,
-            };
-          }
-          return subItem;
-        } else {
-          return subItem;
-        }
-      });
-
-    console.log(postData);
-
-    const id = toast.loading(
-      <div className="flex items-center justify-around text-slate-950 font-semibold">
-        <Puff
-          height="50"
-          width="50"
-          radius={1}
-          color="#4fa94d"
-          ariaLabel="puff-loading"
-          wrapperStyle={{}}
-          wrapperClass=""
-          visible={true}
-        />
-        Sending........
-      </div>,
-      { icon: false }
-    );
-
-    try {
-      const config = {
-        method: "post",
-        url: "/api/reordertool/sendtransfer",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: postData,
-      };
-
-      const res = await axios(config);
-console.log(res);
-
-      toast.update(id, {
-        render: "Created",
-        isLoading: false,
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        type: "success",
-      });
-
-      const popupTost = (time: number, element: any) => {
-        setTimeout(() => {
-          if (element.status === "fulfilled") {
-            toast(`Stock ${element.value} Created`, {
-              position: "top-right",
-              autoClose: 2000 * time,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              type: "success",
-            });
-          } else {
-            toast("Stock is not created", {
-              position: "top-right",
-              autoClose: 2000 * time,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              type: "error",
-            });
-          }
-        }, 1000 * time);
-      };
-  
-      const valu = res.data.map((item: any) => ({
-        status:item.status,
-        value: item.value.seqNo
-      }));
-     
-      
-      for (let index = 0; index < valu.length; index++) {
-        const element = valu[index];
-        popupTost(index + 1, element);
-      }
-      console.log(res);
-      setSending(false);
-    } catch (error) {
-      toast.update(id, {
-        render: "Internal Error",
-        isLoading: false,
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        type: "error",
-      });
-      console.log(error);
-      setSending(false);
-    }
-  };
-
-
- const wo=()=>{
-  sendWorkOrder (table,toast,setSending,supplierData )
- }
-
-
-
+  const chartData = useMemo(() => {
+    return wareHouseData;
+  }, []);
 
   console.log(table.getFilteredSelectedRowModel().rows);
   return (
     <div className="pr-5 pl-5 py-5 ">
       <div className="flex justify-between items-center p-5">
-        <SnoozeItems details={pauseItems} setSnoozeVisible={setSnoozeVisible} snoozeVisible={snoozeVisible}/>
+        <SnoozeItems
+          details={pauseItems}
+          setDetails={setPauseItems}
+          setSnoozeVisible={setSnoozeVisible}
+          snoozeVisible={snoozeVisible}
+          setSnoozeRemoveData={setSnoozeRemoveData}
+        />
         <WarehouseComp
           chartModal={chartModal}
           setChartModal={setChartModal}
-          details={wareHouseData}
+          details={chartData}
         />
         <div>
           {" "}
@@ -775,7 +463,9 @@ console.log(res);
                 <DropdownMenuItem>
                   <Button
                     variant={"outline"}
-                    onClick={sendOrder}
+                    onClick={() => {
+                      sendOrder(table, toast, setSending, supplierData);
+                    }}
                     className="rounded-lg w-40 text-left"
                   >
                     Send Orders
@@ -785,7 +475,9 @@ console.log(res);
                 <DropdownMenuItem>
                   <Button
                     variant={"outline"}
-                    onClick={sendTransfers}
+                    onClick={() => {
+                      sendTransfers(table, toast, setSending, supplierData);
+                    }}
                     className="rounded-lg w-40 text-left"
                   >
                     Transfer
@@ -795,7 +487,9 @@ console.log(res);
                 <DropdownMenuItem>
                   <Button
                     variant={"outline"}
-                    onClick={wo}
+                    onClick={() => {
+                      sendWorkOrder(table, toast, setSending, supplierData);
+                    }}
                     className="rounded-lg w-40 text-left"
                   >
                     Work Order
@@ -805,7 +499,9 @@ console.log(res);
                 <DropdownMenuItem>
                   <Button
                     variant={"outline"}
-                    onClick={() => {setSnoozeVisible(true)}}
+                    onClick={() => {
+                      setSnoozeVisible(true);
+                    }}
                     className="rounded-lg w-40"
                   >
                     Snoozed Items
@@ -850,7 +546,11 @@ console.log(res);
         </div>
       </div>
       <div className=" p-1">
-        <ReorderDataTable useTable={table} supData={supplierData} columns={columnDef} />
+        <ReorderDataTable
+          useTable={table}
+          supData={supplierData}
+          columns={columnDef}
+        />
       </div>
 
       <div className="h-4" />
@@ -935,6 +635,9 @@ console.log(res);
             </SelectGroup>
           </SelectContent>
         </Select>
+        <form>
+          <button type="submit">reload</button>
+        </form>
       </div>
       <div className="flex-1 text-sm text-muted-foreground">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}

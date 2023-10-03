@@ -44,24 +44,19 @@ import {
   SelectGroup,
   SelectItem,
 } from "@radix-ui/react-select";
+import { Input } from "@/components/ui/input";
+// import { useRouter } from "next/router";
 
-declare module "@tanstack/table-core" {
-  interface TableMeta<TData extends RowData> {
-    editedRows: any;
-    updateData: (rowIndex: any, columnId: any, value: any) => void;
-    setEditedRows: any;
-    addRow: any;
-    setwareHouseData: any;
-    setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
-    updateSelectValue: (rowIndex: any, columnId: any, value: any) => void;
-    removeRow: (rowIndex: any, columnId: any) => void;
-  }
-}
+
+
+
 
 type Props = {
   setSnoozeVisible: any;
   snoozeVisible: boolean;
   details: any;
+  setSnoozeRemoveData:any
+  setDetails:any
 };
 
 function useSkipper() {
@@ -80,8 +75,8 @@ function useSkipper() {
   return [shouldSkip, skip] as const;
 }
 
-const SnoozeItems = ({ setSnoozeVisible, snoozeVisible, details }: Props) => {
-  console.log(details);
+const SnoozeItems = ({ setDetails,setSnoozeVisible, snoozeVisible, details ,setSnoozeRemoveData}: Props) => {
+  console.log('snooze');
 
   const [data, setData] = useState(details);
   const [autoResetPageIndex, skipAutoResetPageIndex] = useSkipper();
@@ -98,7 +93,8 @@ const SnoozeItems = ({ setSnoozeVisible, snoozeVisible, details }: Props) => {
   const [wareHouseData, setwareHouseData] = useState({});
   const [chartModal, setChartModal] = useState(false);
   const [sending, setSending] = useState(false);
-console.log(data);
+
+  //const router = useRouter()
 
   const columnDef: any = useMemo(() => {
     return columnsSnooze;
@@ -160,51 +156,28 @@ console.log(data);
     //  debugTable: true,
     // globalFilterFn: globalFnsTwo,
 
-    // meta: {
-    //   editedRows,
-    //   setEditedRows,
-    //   updateData: (rowIndex, columnId, value) => {
-    //     // Skip page index reset until after next rerender
-    //     console.log(rowIndex, columnId, value);
-
-    //     skipAutoResetPageIndex();
-    //     setData((old) =>
-    //       old.map((row, index) => {
-    //         if (index === rowIndex) {
-    //           return {
-    //             ...old[rowIndex],
-    //             [columnId]: value.label,
-    //             name: value,
-    //           };
-    //         }
-    //         return row;
-    //       })
-    //     );
-    //   },
-    //   updateSelectValue: (rowIndex, columnId, value) => {
-    //     // Skip page index reset until after next rerender
-    //     skipAutoResetPageIndex();
-    //     setData((old) =>
-    //       old.map((row, index) => {
-    //         if (index === rowIndex) {
-    //           return {
-    //             ...old[rowIndex],
-    //             [columnId]: value.label,
-    //             name: value,
-    //           };
-    //         }
-    //         return row;
-    //       })
-    //     );
-    //   },
-    //   removeRow: () => {},
-    //   addRow: () => {},
-    //   setwareHouseData,
-    //   setChartModal,
-    // },
+    meta: {
+      editedRows,
+      setEditedRows,
+      updateData: (rowIndex, columnId, value) => {
+      },
+      updateSelectValue: (rowIndex, columnId, value) => {
+       
+      },
+      removeRow: (rowIndex, columnId, ) => {
+        skipAutoResetPageIndex();
+        setDetails((old:any) =>
+          old.filter((row:any, index:number) => index != rowIndex)
+        );
+      },
+      addRow: () => {},
+      setwareHouseData,
+      setChartModal,
+      setSnoozeRemoveData
+    },
   });
 
-  console.log(data);
+;
   return (
     <div>
       <Dialog onOpenChange={setSnoozeVisible} open={snoozeVisible}>
@@ -214,15 +187,22 @@ console.log(data);
           }
         >
           <DialogHeader>
-            <DialogTitle>{details?.locationName}</DialogTitle>
-            <DialogDescription>{details.stockCode}</DialogDescription>
+            <DialogTitle className="ml-5">SNOOZED ITEMS</DialogTitle>
           </DialogHeader>
-
+          <div>
+          {" "}
+          <Input
+            type="text"
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="w-48 ml-5 mt-2"
+          />
+        </div>
           <div className="grid gap-4 py-4 p-5 ">
-            <div className=" p-1">
+            <div className=" p-5">
               <SnozzeDataTable useTable={table} columns={columnDef} />
             </div>
-            {/* <div className="h-4" />
+            <div className="h-4" />
 
             <div className="flex items-center gap-2">
               <button
@@ -260,13 +240,14 @@ console.log(data);
                   {table.getPageCount()}
                 </strong>
               </span>
-            </div> */}
+            </div>
           </div>
 
           <DialogFooter>
-            <DialogClose className="border p-2 rounded-md hover:border-red-600 border-gray-600 mb-10">
-              CLOSE
-            </DialogClose>
+          <form>
+          <button type="submit">reload</button>
+        </form>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -6,6 +6,158 @@ import {
   ColumnFilterAutoRemoveTestFn,
 } from "@tanstack/react-table";
 
+
+
+
+
+
+
+interface SupplierAccount {
+  accNo: number;
+  name: string;
+  address1: string | null;
+  address2: string | null;
+  address3: string | null;
+  phone: string | null;
+  fax: string | null;
+  email: string | null;
+  acccountGroup: number;
+  creditStatus: number;
+  deleveryAddress1: string | null;
+  deleveryAddress2: string | null;
+  deleveryAddress3: string | null;
+  deleveryAddress4: string | null;
+  notes: string | null;
+  currencyNo: number;
+  isActive: 'Y' | 'N' | null;
+  postCode: string | null;
+  deleveryAddress5: string | null;
+  deleveryAddress6: string | null;
+  address4: string | null;
+  acccountGroup2: number;
+  address5: string | null;
+  deliveryNotes: string | null;
+  deliveryNotesTwo: string | null;
+  creditStatuses: {
+    statusNo: number;
+    statusDesc: string;
+    creditFactor: number;
+    activeDr: 'Y' | 'N' | null;
+    activeCr: 'Y' | 'N' | null;
+    balWarningSql: string;
+    warningText: string;
+  };
+}
+
+interface Supplier {
+  stockCode: string;
+  supplierCode: string;
+  description: string;
+  latestCost: number;
+  accNo: number;
+  econOrderQty: number | null;
+  purchPackQuant: number;
+  purchPackPrice: number;
+  packReference: string | null;
+  lastUpdate: Date | null;
+  discount: number;
+  isDefault: 'Y' | 'N' | null;
+  leadTime: number;
+  tempLoc: string | null;
+  supplierAccount: SupplierAccount;
+  notes: string;
+}
+
+interface NameArrayItem {
+  label: string;
+  value: number;
+}
+
+interface StockItem {
+  stockCode: string;
+  description: string;
+  stockGroupNo: number;
+  status: string
+  sellPrice1: number;
+  sellPrice2: number;
+  sellPrice3: number;
+  sellPrice4: number;
+  sellPrice5: number;
+  sellPrice6: number;
+  sellPrice7: number;
+  sellPrice8: number;
+  sellPrice9: number;
+  sellPrice10: number;
+  latestCost: number;
+  xLeadTimeRest: number;
+  avgCost: number;
+  supplierNo: number;
+  notes: string;
+  totalStock: number;
+  pitureUrl: string;
+  qrCode: string | null;
+  toolItemsImage: string | null;
+  billomatHdr: any | null;
+  supplierStockItems: Supplier[];
+}
+
+interface ProductData {
+  id: number;
+  exclamationMark: boolean;
+  stockCode: string;
+  billomatHdr?: any | null;
+  branchName: string;
+  locationNumber: number;
+  locationName: string;
+  locationAddress1: string;
+  locationAddress2: string;
+  locationAddress3: string;
+  locationAddress4: string;
+  supplierNumber: number;
+  supplierAccount: SupplierAccount;
+  description: string;
+  minStock: number;
+  maxStock: number;
+  inStockQTY: number;
+  incomingty?: number;
+  purchOrdQTY: number;
+  salesOrdQTY: number;
+  nameArray: NameArrayItem[];
+  isExpand: boolean;
+  isCreateWorkOrder: boolean;
+  supplierCode: string;
+  fromLoc: number;
+  workOrder: boolean;
+  stockItem: StockItem;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const getLocations = (items: any[]) => {
   const locations: string[] = [];
   let location: string = "";
@@ -151,7 +303,7 @@ const isCreateWorkOrder = (item: any) => {
   return false;
 };
 
-export const getStockOrder = (item: any[], supData: any, pauseItems: any) => {
+export const getStockOrder = (item: any[], supData: any, pauseItems: any):ProductData[] => {
   const stockOrder = item
     .filter(
       (item1) =>
@@ -174,19 +326,19 @@ export const getStockOrder = (item: any[], supData: any, pauseItems: any) => {
         branchName: e.stockLocation.lName,
         locationNumber: e.stockLocation.locNo,
         locationName: e.stockLocation.lName,
-        locationAddress1: e.stockLocation.deladdr1,
-        locationAddress2: e.stockLocation.deladdr2,
-        locationAddress3: e.stockLocation.deladdr3,
-        locationAddress4: e.stockLocation.deladdr4,
+        locationAddress1: e.stockLocation?.deladdr1,
+        locationAddress2: e.stockLocation?.deladdr2,
+        locationAddress3: e.stockLocation?.deladdr3,
+        locationAddress4: e.stockLocation?.deladdr4,
         supplierNumber: e.supplierAccount.accNo,
         supplierAccount: e.supplierAccount,
-        description: e.stockItem.description,
-        minStock: e.minStock,
-        maxStock: e.maxStock,
-        inStockQTY: e.inStockQTY,
+        description: e.stockItem?.description,
+        minStock: e?.minStock,
+        maxStock: e?.maxStock,
+        inStockQTY: e?.inStockQTY,
         incommingty: e?.incommingty,
         purchOrdQTY: e.purchOrdQTY,
-        i: e.i,
+        i: i,
         salesOrdQTY: e.salesOrdQTY,
         name: { name: e.supplierName, accNo: e.supplierAccount.accNo },
         sName: e.supplierName,
@@ -200,7 +352,7 @@ export const getStockOrder = (item: any[], supData: any, pauseItems: any) => {
         calcReOrd: palletQty(e),
         select: false,
         stockItem: e.stockItem,
-        supplierCode: e.supplierCode,
+        supplierCode: e?.supplierCode,
         fromLoc: e.centralLocation,
         workOrder: processWorkorder(e),
         nameArray: addSupNames(e, supData),

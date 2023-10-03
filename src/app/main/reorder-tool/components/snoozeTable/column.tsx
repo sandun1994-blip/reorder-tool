@@ -75,7 +75,7 @@ export const columnsSnooze = [
 
         const config = {
           method: "DELETE",
-          url: "/api/reordertool/pauseItem"+ original.id,
+          url: "/api/reordertool/pauseItem/"+ original.id,
           headers: {
             "Content-Type": "application/json",
           },
@@ -99,8 +99,9 @@ export const columnsSnooze = [
             });
 
             table.options.meta?.removeRow(index, id);
+            table.options.meta?.setSnoozeRemoveData((data:any)=>[...data,original])
         } catch (error) {
-          toast.error('Error', {
+          toast.error('Can Not Delete', {
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -117,7 +118,9 @@ export const columnsSnooze = [
         <div className=" flex items-center justify-center">
           <FaDeleteLeft
             size={25}
-            className="cursor-pointer hover:text-red-600" />
+            className="cursor-pointer hover:text-red-600"
+            onClick={handleClick}
+            />
           
         </div>
       );

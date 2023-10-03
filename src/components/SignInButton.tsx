@@ -12,7 +12,7 @@ const SignInButton = (props: Props) => {
   
   if (session && session.user)
     return (
-      <div className="flex gap-4 ml-auto">
+      <div className="flex gap-4 ml-auto items-center">
          <ThemeToggle className="mr-4" />
         <p className="text-sky-600">{session?.user.name}</p>
         <Link
@@ -25,8 +25,11 @@ const SignInButton = (props: Props) => {
     );
 
   return (
-    <div className="flex gap-4 ml-auto items-center">
-       <ThemeToggle className="mr-4" />
+    <div className="flex gap-4 ml-auto items-center ">
+      <div className="">
+      <ThemeToggle className="mr-4" />
+      </div>
+      
       <Link
         href={"/api/auth/signin"}
         className="flex gap-4 ml-auto text-red-600"
