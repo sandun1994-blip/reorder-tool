@@ -29,18 +29,25 @@ interface DataTableProps<TData, TValue> {
   useTable: TableType<any>;
   supData :any
   columns: ColumnDef<TData, TValue>[];
+  columnResizeMode:any
+  resizeMode:boolean
   
 }
 
 const ReorderDataTable = <TData, TValue>({
   supData,
   useTable,
-  columns
+  columnResizeMode,
+  columns,
+  resizeMode
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
   return (
     <div className="bg-white dark:bg-black  rounded-2xl ">
-      <Table className="border rounded-lg">
+      <Table className="border rounded-lg" 
+            style= {{ width: resizeMode?table.getCenterTotalSize():'',
+            }}
+          >
         <TableHeader className="m-10 bg-green-600 shadow-2xl rounded-lg hover:opacity-100 ">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -50,6 +57,9 @@ const ReorderDataTable = <TData, TValue>({
                     key={header.id}
                     colSpan={header.colSpan}
                     className="text-center text-xs border px-2 py-2 border-green-200 text-black font-semibold   dark:text-white "
+                    style={{
+                      width: header.getSize(),
+                    }}
                   >
                     {header.isPlaceholder ? null : (
                       <>
@@ -65,6 +75,24 @@ const ReorderDataTable = <TData, TValue>({
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                           <div
+                      {...{
+                        onMouseDown: header.getResizeHandler(),
+                        onTouchStart: header.getResizeHandler(),
+                        className: `resizer ${
+                          header.column.getIsResizing() ? 'isResizing' : ''
+                        }`,
+                        style: {
+                          transform:
+                            columnResizeMode === 'onEnd' &&
+                            header.column.getIsResizing()
+                              ? `translateX(${
+                                  table.getState().columnSizingInfo.deltaOffset
+                                }px)`
+                              : '',
+                        },
+                      }}
+                    />
                           {{
                             asc: "🔼",
                             desc: " 🔽",

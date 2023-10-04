@@ -17,6 +17,7 @@ import {
   RowData,
   TableOptions,
   VisibilityState,
+  ColumnResizeMode,
 } from "@tanstack/react-table";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { columns } from "./components/columnsReorder";
@@ -65,6 +66,7 @@ import { sendOrder, sendTransfers, sendWorkOrder } from "./lib/sendHooks";
 import SnoozeItems from "./components/snoozeItems";
 import { useRouter } from "next/navigation";
 import { FcSearch } from "react-icons/fc";
+import '../reorder-tool/index.css'
 
 
 declare module "@tanstack/table-core" {
@@ -145,7 +147,8 @@ const ReorderTool = (props: Props) => {
   const [pauseItems, setPauseItems] = useState([]);
   const [snoozeVisible, setSnoozeVisible] = useState(false);
   const [soonzeRemoveData, setSnoozeRemoveData] = useState([]);
-
+  const [columnResizeMode, setColumnResizeMode] =React.useState<ColumnResizeMode>('onChange')
+  const [resizeMode,setResizemode] =useState(false)
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
     [arrayOfLocations]
@@ -242,6 +245,7 @@ const ReorderTool = (props: Props) => {
   const table = useReactTable({
     data,
     columns: columnDef,
+    columnResizeMode,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -543,17 +547,30 @@ const ReorderTool = (props: Props) => {
                   </Button>
                   <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
                 </DropdownMenuItem>
+
+                <DropdownMenuItem>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {setResizemode(pre=>!pre)}}
+                    className="rounded-lg w-40"
+                  >
+                    Resize Mode
+                  </Button>
+                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+                </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-      <div className=" p-3 shadow-2xl">
+      <div className=" p-3 shadow-2xl  overflow-x-auto">
         <ReorderDataTable
           useTable={table}
           supData={supplierData}
           columns={columnDef}
+          columnResizeMode={columnResizeMode}
+          resizeMode={resizeMode}
         />
       </div>
 
