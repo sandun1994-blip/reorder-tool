@@ -82,12 +82,13 @@ export const columns = [
 
       // If the initialValue is changed external, sync it up with our state
       React.useEffect(() => {
-        setOption({
+        setOption(pre=>({...pre,
           value: row.original?.name.accNo,
           label: row.original?.name.name,
-        });
-      }, [row.original?.name.accNo, row.original?.name.name]);
-
+        }));
+           
+      }, [row.original.name, row.original.sName]);
+     
       //  console.log('updated');
       const handle = (val: any) => {
         table.options.meta?.updateSelectValue(row.index, id, val);
@@ -97,8 +98,45 @@ export const columns = [
 
       return (
         <>
-          <div style={{ width: "200px" }}>
+          <div style={{ width: "200px", }}>
             <ReactSelect
+              theme={(theme) => ({
+                ...theme,
+                borderRadius: 1,
+                colors: {
+                  ...theme.colors,
+                  text: "orangered",
+                  primary25: "#22C55E",
+                  primary: "#22C55E",
+                },
+              })}
+              classNames={{
+                control: (state) =>
+                  state.isFocused ? "border-red-600" : "border-red-300",
+                input: () => "text-red-500 ",
+                menuList(props) {
+                  return "dark:bg-gray-600 ";
+                },
+                groupHeading(props) {
+                  return "bg-yellow-400";
+                },
+                menu: () => "bg-red-400",
+                indicatorsContainer(props) {
+                  return "text-red-400";
+                },
+                valueContainer: () => " rounded-md  dark:text-white  ",
+                dropdownIndicator: () => "bg-green-2s00",
+                group(props) {
+                  return "bg-red-500";
+                },
+                menuPortal: () => "bg-red-500",
+                option: () => "text-red-500",
+                singleValue(props) {
+                  return "text-green-500";
+                },
+                placeholder: () => "text-green-500",
+                multiValueLabel: () => "text-red-500",multiValue:()=>'text-red-500 bg-black',indicatorSeparator:()=>'text-green-400'
+              }}
               id={row.id}
               defaultValue={option}
               onChange={handle}
@@ -124,7 +162,7 @@ export const columns = [
       return (
         <>
           {original.fromLoc > 0 ? (
-            <Button variant={"outline"} size={"sm"} onClick={handleClick}>
+            <Button variant={"outline"} size={"sm"} onClick={handleClick} className="border-gray-400">
               QTY
             </Button>
           ) : (
@@ -167,6 +205,9 @@ export const columns = [
   }),
   columnHelper.accessor("description", {
     header: "Description",
+    cell: ({ getValue, row: { index }, column: { id }, table }) => {
+      return <div className="text-start">{getValue()}</div>
+    },
     enableColumnFilter: false,
     footer: (info) => info.column.id,
   }),
@@ -262,11 +303,8 @@ export const columns = [
   columnHelper.accessor("pause", {
     header: "Pause",
     cell: ({ getValue, row: { index, original }, column: { id }, table }) => {
-
-const [visible,setVisible] =useState(false)
-const [day,setDay] =useState(7)
-
-
+      const [visible, setVisible] = useState(false);
+      const [day, setDay] = useState(7);
 
       const today = new Date();
       const pasueItem = {
@@ -287,8 +325,6 @@ const [day,setDay] =useState(7)
       const postData = async () => {
         const postData = { ...pasueItem };
 
-      
-
         const config = {
           method: "post",
           url: "/api/reordertool/pauseItem",
@@ -304,7 +340,7 @@ const [day,setDay] =useState(7)
       const handleClick = async () => {
         try {
           await postData();
-          toast.success('Sucess', {
+          toast.success("Sucess", {
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -313,12 +349,12 @@ const [day,setDay] =useState(7)
             draggable: true,
             progress: undefined,
             theme: "light",
-            });
+          });
 
-            table.options.meta?.removeRow(index, id);
-            setVisible(false)
+          table.options.meta?.removeRow(index, id);
+          setVisible(false);
         } catch (error) {
-          toast.error('Error', {
+          toast.error("Error", {
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -327,25 +363,23 @@ const [day,setDay] =useState(7)
             draggable: true,
             progress: undefined,
             theme: "light",
-            });
-           console.log(error);
+          });
+          console.log(error);
         }
       };
       return (
         <div className=" flex items-center justify-center">
           <Dialog open={visible} onOpenChange={setVisible}>
             <DialogTrigger asChild>
-              <Button variant="outline"><BsPauseCircle
-            size={25}
-            className="cursor-pointer"
-            
-          /></Button>
+              <Button variant="outline">
+                <BsPauseCircle size={25} className="cursor-pointer hover:text-green-500" />
+              </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Snoozed Item</DialogTitle>
                 <DialogDescription>
-                How many day do you want to hidden this item from today?
+                  How many day do you want to hidden this item from today?
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -357,18 +391,17 @@ const [day,setDay] =useState(7)
                     id="day"
                     className="col-span-3"
                     type="number"
-                    onChange={(e)=>setDay(Number(e.target.value))}
+                    onChange={(e) => setDay(Number(e.target.value))}
                     value={day}
                     min={1}
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleClick} >Confirm</Button>
+                <Button onClick={handleClick}>Confirm</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          
         </div>
       );
     },

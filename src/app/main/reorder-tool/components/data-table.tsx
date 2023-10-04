@@ -39,9 +39,9 @@ const ReorderDataTable = <TData, TValue>({
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
   return (
-    <div className=" ">
-      <Table className="">
-        <TableHeader className="m-10">
+    <div className="bg-white dark:bg-black  rounded-2xl ">
+      <Table className="border rounded-lg">
+        <TableHeader className="m-10 bg-green-600 shadow-2xl rounded-lg hover:opacity-100 ">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -49,7 +49,7 @@ const ReorderDataTable = <TData, TValue>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="text-center text-xs border px-2 py-2 border-gray-400 text-black font-semibold   dark:text-white "
+                    className="text-center text-xs border px-2 py-2 border-green-200 text-black font-semibold   dark:text-white "
                   >
                     {header.isPlaceholder ? null : (
                       <>
@@ -90,11 +90,11 @@ const ReorderDataTable = <TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody className="border border-gray-400">
+        <TableBody className="border border-green-200 font-semibold">
           {table.getRowModel().rows?.length > 0 ? (
             table.getRowModel().rows.map((row) => (
               <Fragment key={row.id}>
-                <TableRow key={row.id} className="border border-gray-400">
+                <TableRow key={row.id} className="border border-green-200">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
@@ -108,7 +108,7 @@ const ReorderDataTable = <TData, TValue>({
                   ))}
                 </TableRow>
                 {row.getIsExpanded() && (
-                  <TableRow className="border border-gray-400">
+                  <TableRow className="border border-green-200">
                     {/* 2nd row is a custom 1 cell row */}
                     <TableCell
                       colSpan={row.getVisibleCells().length}

@@ -69,6 +69,43 @@ export const columnsExpand = [
               defaultValue={option}
               onChange={handle}
               options={options}
+              theme={(theme) => ({
+                ...theme,
+                borderRadius: 1,
+                colors: {
+                  ...theme.colors,
+                  text: "orangered",
+                  primary25: "#22C55E",
+                  primary: "#22C55E",
+                },
+              })}
+              classNames={{
+                control: (state) =>
+                  state.isFocused ? "border-red-600" : "border-red-300",
+                input: () => "text-red-500 ",
+                menuList(props) {
+                  return "dark:bg-gray-600 ";
+                },
+                groupHeading(props) {
+                  return "bg-yellow-400";
+                },
+                menu: () => "bg-red-400",
+                indicatorsContainer(props) {
+                  return "text-red-400";
+                },
+                valueContainer: () => " rounded-md  dark:text-white  ",
+                dropdownIndicator: () => "bg-green-400",
+                group(props) {
+                  return "bg-red-500";
+                },
+                menuPortal: () => "bg-red-500",
+                option: () => "text-red-500",
+                singleValue(props) {
+                  return "text-green-500";
+                },
+                placeholder: () => "text-green-500",
+                multiValueLabel: () => "text-red-500",multiValue:()=>'text-red-500 bg-black',indicatorSeparator:()=>'text-green-400'
+              }}
             />
           </div>
         </>

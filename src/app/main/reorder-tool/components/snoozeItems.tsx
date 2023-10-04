@@ -45,7 +45,7 @@ import {
   SelectItem,
 } from "@radix-ui/react-select";
 import { Input } from "@/components/ui/input";
-// import { useRouter } from "next/router";
+ import { FcSearch } from "react-icons/fc";
 
 
 
@@ -187,15 +187,16 @@ const SnoozeItems = ({ setDetails,setSnoozeVisible, snoozeVisible, details ,setS
           }
         >
           <DialogHeader>
-            <DialogTitle className="ml-5">SNOOZED ITEMS</DialogTitle>
+            <DialogTitle className="ml-8">SNOOZED ITEMS</DialogTitle>
           </DialogHeader>
-          <div>
+          <div className="flex justify-start gap- items-center">
           {" "}
+          <FcSearch size={30} className='ml-8'/>
           <Input
             type="text"
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="w-48 ml-5 mt-2"
+            className="w-48 ml-8 mt-2 border-gray-400 h-8"
           />
         </div>
           <div className="grid gap-4 py-4 p-5 ">
@@ -245,7 +246,7 @@ const SnoozeItems = ({ setDetails,setSnoozeVisible, snoozeVisible, details ,setS
 
           <DialogFooter>
           <form>
-          <button type="submit">reload</button>
+          <button type="submit" className="font-bold hover:text-blue-900">Refresh</button>
         </form>
 
           </DialogFooter>

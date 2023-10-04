@@ -22,6 +22,7 @@ import { FaDeleteLeft } from "react-icons/fa6";
 import axios from "axios";
 
 import { toast } from "react-toastify";
+import moment from 'moment';
 
 declare module "@tanstack/react-table" {
   //   interface TableMeta<TData extends RowData> {
@@ -56,6 +57,9 @@ export const columnsSnooze = [
   }),
   columnHelper.accessor("insertDate", {
     header: "INSERT DATE",
+    cell:({ getValue, row: { index, original }, column: { id }, table })=>{
+      return <div>{ moment(getValue()).format('YYYY-MM-DD') }</div>
+    },
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("hiddenDay", {

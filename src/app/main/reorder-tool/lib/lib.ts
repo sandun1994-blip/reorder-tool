@@ -29,7 +29,7 @@ interface SupplierAccount {
   deleveryAddress4: string | null;
   notes: string | null;
   currencyNo: number;
-  isActive: 'Y' | 'N' | null;
+  isActive: string | null;
   postCode: string | null;
   deleveryAddress5: string | null;
   deleveryAddress6: string | null;
@@ -42,8 +42,8 @@ interface SupplierAccount {
     statusNo: number;
     statusDesc: string;
     creditFactor: number;
-    activeDr: 'Y' | 'N' | null;
-    activeCr: 'Y' | 'N' | null;
+    activeDr: string | null;
+    activeCr: string | null;
     balWarningSql: string;
     warningText: string;
   };
@@ -61,7 +61,7 @@ interface Supplier {
   packReference: string | null;
   lastUpdate: Date | null;
   discount: number;
-  isDefault: 'Y' | 'N' | null;
+  isDefault: string | null;
   leadTime: number;
   tempLoc: string | null;
   supplierAccount: SupplierAccount;
@@ -122,11 +122,22 @@ interface ProductData {
   incomingty?: number;
   purchOrdQTY: number;
   salesOrdQTY: number;
+  name: { name: string, accNo: number },
+  sName: string,
+  sales1: number,
+  sales2: number,
+  sales3: number,
+  sales4: number,
+  sales5: number,
+  sales6: number,
+  sales0: number,
+  calcReOrd: number,
+  select: false,
   nameArray: NameArrayItem[];
   isExpand: boolean;
   isCreateWorkOrder: boolean;
   supplierCode: string;
-  fromLoc: number;
+  fromLoc?: number;
   workOrder: boolean;
   stockItem: StockItem;
 }
@@ -338,7 +349,6 @@ export const getStockOrder = (item: any[], supData: any, pauseItems: any):Produc
         inStockQTY: e?.inStockQTY,
         incommingty: e?.incommingty,
         purchOrdQTY: e.purchOrdQTY,
-        i: i,
         salesOrdQTY: e.salesOrdQTY,
         name: { name: e.supplierName, accNo: e.supplierAccount.accNo },
         sName: e.supplierName,

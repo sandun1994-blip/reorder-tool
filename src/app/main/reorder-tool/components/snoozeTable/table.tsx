@@ -35,8 +35,8 @@ const SnozzeDataTable = <TData, TValue>({
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
   return (
-    <div className=" ">
-      <Table className="">
+    <div className="shadow-2xl ">
+      <Table className="font-bold">
         <TableHeader className="m-10">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>

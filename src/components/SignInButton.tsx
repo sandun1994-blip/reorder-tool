@@ -8,13 +8,14 @@ type Props = {};
 const SignInButton = (props: Props) => {
   const { data: session } = useSession();
 
+  console.log(session);
   
   
   if (session && session.user)
     return (
       <div className="flex gap-4 ml-auto items-center">
          <ThemeToggle className="mr-4" />
-        <p className="text-sky-600">{session?.user.name}</p>
+        <p className="text-sky-600">{session?.user.username}</p>
         <Link
           href={"/api/auth/signout"}
           className="flex gap-4 ml-auto text-red-600"

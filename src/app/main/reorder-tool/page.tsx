@@ -52,7 +52,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
 import WarehouseComp from "./components/warehouseComp";
 import { toast } from "react-toastify";
-import { Puff, Watch } from "react-loader-spinner";
 import {
   Select,
   SelectContent,
@@ -65,7 +64,8 @@ import {
 import { sendOrder, sendTransfers, sendWorkOrder } from "./lib/sendHooks";
 import SnoozeItems from "./components/snoozeItems";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { FcSearch } from "react-icons/fc";
+
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
@@ -293,13 +293,14 @@ const ReorderTool = (props: Props) => {
       updateSelectValue: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
+        
         setData((old) =>
           old.map((row, index) => {
             if (index === rowIndex) {
               return {
                 ...old[rowIndex],
                 [columnId]: value.label,
-                name: value,
+                name: {name:value.label,accNo:value.value},
               };
             }
             return row;
@@ -360,9 +361,9 @@ const ReorderTool = (props: Props) => {
 
   console.log(table.getFilteredSelectedRowModel().rows);
   return (
-    <div className="pr-5 pl-5 py-5 ">
-      <div className="flex justify-between items-center p-5">
-        <SnoozeItems
+    <div className="pr-5 pl-5 py-5 shadow-2xl  ">
+      <>
+      <SnoozeItems
           details={pauseItems}
           setDetails={setPauseItems}
           setSnoozeVisible={setSnoozeVisible}
@@ -372,15 +373,18 @@ const ReorderTool = (props: Props) => {
         <WarehouseComp
           chartModal={chartModal}
           setChartModal={setChartModal}
-          details={chartData}
-        />
-        <div>
+          details={wareHouseData}
+        /></>
+      <div className="flex justify-around items-center p-5  shadow-2xl sha">
+      
+        <div className="flex justify-center items-center gap-4">
           {" "}
+          <FcSearch size={35}/>
           <Input
             type="text"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="max-w-sm"
+            className="max-w-sm border-gray-300"
           />
         </div>
         <div className="">
@@ -407,7 +411,7 @@ const ReorderTool = (props: Props) => {
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto" disabled={sending}>
+              <Button variant="outline" className="ml-auto border-gray-300" disabled={sending}>
                 Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -442,7 +446,7 @@ const ReorderTool = (props: Props) => {
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={sending}>
+              <Button variant="outline" disabled={sending} className="border-gray-300">
                 Actions
               </Button>
             </DropdownMenuTrigger>
@@ -545,7 +549,7 @@ const ReorderTool = (props: Props) => {
           </DropdownMenu>
         </div>
       </div>
-      <div className=" p-1">
+      <div className=" p-3 shadow-2xl">
         <ReorderDataTable
           useTable={table}
           supData={supplierData}
@@ -636,7 +640,7 @@ const ReorderTool = (props: Props) => {
           </SelectContent>
         </Select>
         <form>
-          <button type="submit">reload</button>
+          <button type="submit" className="ml-3 font-bold hover:text-green-500 p-1  ">reload</button>
         </form>
       </div>
       <div className="flex-1 text-sm text-muted-foreground">

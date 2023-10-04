@@ -145,7 +145,6 @@ export const sendWorkOrder = async (
     .map((item: any) => item.original)
     .filter((item1: any) => item1.calcReOrd > 0).map((item2:any)=>({seqNo: null,
         transDate: new Date(),
-        salesNo: 2,
         billCode: item2.billomatHdr.billCode,
         prodQty: Number(item2.calcReOrd),
         prodLocNo: item2.locationNumber}))

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      data: {...body,insertBy:user.name },
+      data: {...body,insertBy:user.username      },
     };
 
     const sendOrder = await axios(config);

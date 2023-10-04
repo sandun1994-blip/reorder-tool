@@ -244,15 +244,17 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
           })
         );
       },
-      updateSelectValue:(rowIndex, columnId, value) => {
+      updateSelectValue: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
+        
         setData((old) =>
           old.map((row, index) => {
             if (index === rowIndex) {
               return {
                 ...old[rowIndex],
-                [columnId]: value.label,name:value
+                [columnId]: value.label,
+                name: {name:value.label,accNo:value.value},
               };
             }
             return row;

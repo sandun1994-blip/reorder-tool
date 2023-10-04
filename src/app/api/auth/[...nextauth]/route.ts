@@ -25,19 +25,19 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "jsmith" },
+        username: { label: "Username", type: "text", placeholder: "gx" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials, req)  {
         if (!credentials?.password || !credentials?.password) {
           return null;
         }
         const { username, password } = credentials;
 
-        const res = await fetch("http://localhost:3005/auth/signin", {
+        const res = await fetch(Backend_URL +"/auth/signin", {
           method: "POST",
           body: JSON.stringify({
-            email: username,
+             username,
             password,
           }),
           headers: {
@@ -56,7 +56,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }) {  
       if (user) return { ...token, ...user };
 
       if (new Date().getTime() < token.backendTokens.expiresIn) {
@@ -71,7 +71,9 @@ export const authOptions: NextAuthOptions = {
 
       return session;
     },
-  },
+  },session:{
+    maxAge: 60 * 60  // 12 * 60 * 60
+  }
 };
 
 const handler = NextAuth(authOptions);

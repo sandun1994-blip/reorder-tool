@@ -72,7 +72,7 @@ console.log('warehouse');
       <Dialog onOpenChange={setChartModal} open={chartModal} >
         <DialogContent
           className={
-            " overflow-y-scroll max-h-screen mt-10 border border-gray-500   max-w-fit "
+            " overflow-y-scroll max-h-screen mt-10 border border-gray-500   max-w-fit shadow-2xl "
           }
         >
           <DialogHeader >
@@ -96,15 +96,15 @@ console.log('warehouse');
             ) : (
               <div className=" items-center gap-4 border ">
                 <Table >
-                  <TableHeader className="border border-gray-500">
-                    <TableRow className="border border-gray-500">
+                  <TableHeader className="border border-gray-500 bg-gray-300 font-bold">
+                    <TableRow className="border border-gray-500 font-bold">
                       <TableHead>WAREHOUSES</TableHead>
                       <TableHead>SOH</TableHead>
                       <TableHead>INCOMING</TableHead>
                       <TableHead className="text-center">ANALASIS</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody className="border border-gray-500">
+                  <TableBody className="border border-gray-500 font-sans font-bold">
                     {data?.map((item:any,i) => (
                       <TableRow key={i} className="p-20 ">
                         <TableCell >{item?.stockLocation?.lName}</TableCell>

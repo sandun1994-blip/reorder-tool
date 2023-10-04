@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      data: { data: body, user: user.name },
+      data: { data: body, user },
     };
 
     const workOrder = await axios(config);

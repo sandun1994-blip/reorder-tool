@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      data: { data: body, user: user.name },
+      data: { data: body, user: user.username
+      },
     };
 
     const sendTransfer = await axios(config);
