@@ -70,7 +70,7 @@ const SelectComp = ({
           indicatorsContainer(props) {
             return "text-red-400";
           },
-          valueContainer: () => " rounded-md  dark:text-white dark:bg-black  ",
+          valueContainer: () => " rounded-md  dark:text-white dark:bg-[#2E3B42]  ",
           dropdownIndicator: () => "bg-green-400",
           group(props) {
             return "bg-red-500";

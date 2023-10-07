@@ -115,7 +115,7 @@ export const columns = [
                   state.isFocused ? "border-red-600" : "border-red-300",
                 input: () => "text-red-500 ",
                 menuList(props) {
-                  return "dark:bg-gray-600 ";
+                  return " ";
                 },
                 groupHeading(props) {
                   return "bg-yellow-400";
@@ -162,7 +162,7 @@ export const columns = [
       return (
         <>
           {original.fromLoc > 0 ? (
-            <Button variant={"outline"} size={"sm"} onClick={handleClick} className="border-gray-400">
+            <Button variant={"outline"} size={"sm"} onClick={handleClick} className="border-gray-400 dark:bg-slate-600 dark:text-white rounded">
               QTY
             </Button>
           ) : (
@@ -293,7 +293,7 @@ export const columns = [
           onChange={(e) => setValue(+e.target.value)}
           onBlur={onBlur}
           type="number"
-          className=" text-end  rounded-md  dark:text-white border   border-green-500 focus:outline-none focus:border-red-500 p-1"
+          className=" text-end    dark:text-white border    focus:outline-none focus:border-red-500 p-1 rounded dark:bg-slate-600"
           style={{ maxWidth: "70px" }}
         />
       );
@@ -371,8 +371,8 @@ export const columns = [
         <div className=" flex items-center justify-center">
           <Dialog open={visible} onOpenChange={setVisible}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <BsPauseCircle size={25} className="cursor-pointer hover:text-green-500" />
+              <Button  className="dark:bg-transparent bg-transparent hover:bg-transparent">
+                <BsPauseCircle size={25} className="cursor-pointer hover:text-green-500 text-black" />
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">

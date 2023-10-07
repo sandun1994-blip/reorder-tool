@@ -66,8 +66,12 @@ import { sendOrder, sendTransfers, sendWorkOrder } from "./lib/sendHooks";
 import SnoozeItems from "./components/snoozeItems";
 import { useRouter } from "next/navigation";
 import { FcSearch } from "react-icons/fc";
-import '../reorder-tool/index.css'
-
+import "../reorder-tool/index.css";
+import { ImFolderDownload } from "react-icons/im";
+import { BsExclude, BsFillPauseBtnFill, BsFillSendFill } from "react-icons/bs";
+import { BiSolidReport } from "react-icons/bi";
+import { IoIosListBox, IoMdRefreshCircle, IoMdResize } from "react-icons/io";
+import { Card, CardContent } from "@/components/ui/card";
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
@@ -147,8 +151,9 @@ const ReorderTool = (props: Props) => {
   const [pauseItems, setPauseItems] = useState([]);
   const [snoozeVisible, setSnoozeVisible] = useState(false);
   const [soonzeRemoveData, setSnoozeRemoveData] = useState([]);
-  const [columnResizeMode, setColumnResizeMode] =React.useState<ColumnResizeMode>('onChange')
-  const [resizeMode,setResizemode] =useState(false)
+  const [columnResizeMode, setColumnResizeMode] =
+    React.useState<ColumnResizeMode>("onChange");
+  const [resizeMode, setResizemode] = useState(false);
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
     [arrayOfLocations]
@@ -297,14 +302,14 @@ const ReorderTool = (props: Props) => {
       updateSelectValue: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
-        
+
         setData((old) =>
           old.map((row, index) => {
             if (index === rowIndex) {
               return {
                 ...old[rowIndex],
                 [columnId]: value.label,
-                name: {name:value.label,accNo:value.value},
+                name: { name: value.label, accNo: value.value },
               };
             }
             return row;
@@ -365,9 +370,9 @@ const ReorderTool = (props: Props) => {
 
   console.log(table.getFilteredSelectedRowModel().rows);
   return (
-    <div className="pr-5 pl-5 py-5 shadow-2xl  ">
+    <div className="pr-5 pl-5 py-5 shadow-2xl  h-full ml-5 rounded-md">
       <>
-      <SnoozeItems
+        <SnoozeItems
           details={pauseItems}
           setDetails={setPauseItems}
           setSnoozeVisible={setSnoozeVisible}
@@ -378,193 +383,222 @@ const ReorderTool = (props: Props) => {
           chartModal={chartModal}
           setChartModal={setChartModal}
           details={wareHouseData}
-        /></>
-      <div className="flex justify-around items-center p-5  shadow-2xl sha">
-      
-        <div className="flex justify-center items-center gap-4">
-          {" "}
-          <FcSearch size={35}/>
-          <Input
-            type="text"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="max-w-sm border-gray-300"
-          />
-        </div>
-        <div className="">
-          {" "}
-          <SelectComp
-            id={"loc-filter"}
-            options={options}
-            setOptions={setOptions}
-            optionArray={optionsArray}
-            setGlobalFilter={setGlobalFilter}
-          />
-        </div>
-        <div className=" ml-3">
-          <SelectComp
-            id={"loc-filter-2"}
-            options={optionsTwo}
-            setOptions={setOptionsTwo}
-            optionArray={optionsArray}
-            setGlobalFilter={setGlobalFilter}
-          />
-        </div>
-        <div></div>
+        />
+      </>
 
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto border-gray-300" disabled={sending}>
-                Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
+      <div className="mx-3 ">
+        <div
+          className=" flex justify-between items-center pt-4
+       bg-white rounded-lg shadow-xl p-6 dark:bg-[#2E3B42] "
+        >
+          <div className="flex justify-center items-center gap-4 ">
+            {" "}
+            <FcSearch size={35} />
+            <Input
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="max-w-sm border-gray-400 dark:bg-current rounded"
+            />
+          </div>
+          <div className="z-50">
+            {" "}
+            <SelectComp
+              id={"loc-filter"}
+              options={options}
+              setOptions={setOptions}
+              optionArray={optionsArray}
+              setGlobalFilter={setGlobalFilter}
+            />
+          </div>
 
-            <DropdownMenuContent
-              align="end"
-              className="rounded-lg borrder border-gray-500 "
-            >
-              <DropdownMenuLabel>Select Columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize cursor-pointer"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value: boolean) => {
-                        column.toggleVisibility(!!value);
-                      }}
+          <div></div>
+
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="ml-auto border-gray-400 dark:bg-[#2E3B42] rounded transform hover:scale-105 transition-transform"
+                  disabled={sending}
+                >
+                  Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="end"
+                className="rounded-lg borrder border-gray-500 "
+              >
+                <DropdownMenuLabel>Select Columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize cursor-pointer transform hover:scale-105 transition-transform"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value: boolean) => {
+                          column.toggleVisibility(!!value);
+                        }}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={sending}
+                  className="shadow-lg dark:bg-[#2E3B42] rounded border-gray-400
+                  transform hover:scale-110 transition-transform"
+                >
+                  Actions
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="rounded-lg borrder border-gray-300 w-56">
+                <DropdownMenuLabel className="flex justify-center items-center text-black font-bold dark:text-white">
+                  Select Action{" "}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => downloadToExcel(data)}
+                      className="rounded-lg w-40 text-left border border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
                     >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                      Download
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <ImFolderDownload size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {
+                        sendOrder(table, toast, setSending, supplierData);
+                      }}
+                      className="rounded-lg w-40 text-left border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                    >
+                      Send Orders
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <BsFillSendFill size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {
+                        sendTransfers(table, toast, setSending, supplierData);
+                      }}
+                      className="rounded-lg w-40 text-left border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                    >
+                      Transfer
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <BsFillSendFill size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {
+                        sendWorkOrder(table, toast, setSending, supplierData);
+                      }}
+                      className="rounded-lg w-40 text-left border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                    >
+                      Work Order
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <BsFillSendFill size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {
+                        setSnoozeVisible(true);
+                      }}
+                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                    >
+                      Snoozed Items
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <BsFillPauseBtnFill size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {}}
+                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                    >
+                      Exclude Items
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <BsExclude size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {}}
+                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                    >
+                      Report One
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <BiSolidReport size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
 
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={sending} className="border-gray-300">
-                Actions
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="rounded-lg borrder border-gray-300 w-56">
-              <DropdownMenuLabel className="">Select Action</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => downloadToExcel(data)}
-                    className="rounded-lg w-40 text-left"
-                  >
-                    Download
-                  </Button>
-                  <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {
-                      sendOrder(table, toast, setSending, supplierData);
-                    }}
-                    className="rounded-lg w-40 text-left"
-                  >
-                    Send Orders
-                  </Button>
-                  <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {
-                      sendTransfers(table, toast, setSending, supplierData);
-                    }}
-                    className="rounded-lg w-40 text-left"
-                  >
-                    Transfer
-                  </Button>
-                  <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {
-                      sendWorkOrder(table, toast, setSending, supplierData);
-                    }}
-                    className="rounded-lg w-40 text-left"
-                  >
-                    Work Order
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {
-                      setSnoozeVisible(true);
-                    }}
-                    className="rounded-lg w-40"
-                  >
-                    Snoozed Items
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {}}
-                    className="rounded-lg w-40"
-                  >
-                    Exclude Items
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {}}
-                    className="rounded-lg w-40"
-                  >
-                    Report One
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {}}
+                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                    >
+                      Refresh
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <IoMdRefreshCircle size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {}}
-                    className="rounded-lg w-40"
-                  >
-                    Refresh
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {setResizemode(pre=>!pre)}}
-                    className="rounded-lg w-40"
-                  >
-                    Resize Mode
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {
+                        setResizemode((pre) => !pre);
+                      }}
+                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                    >
+                      Resize Mode
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <IoMdResize size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
-      <div className=" p-3 shadow-2xl  overflow-x-auto">
+      <div className=" p-3 shadow-2xl  overflow-x-auto ">
         <ReorderDataTable
           useTable={table}
           supData={supplierData}
@@ -578,41 +612,41 @@ const ReorderTool = (props: Props) => {
 
       <div className="flex items-center gap-2">
         <button
-          className="border rounded p-1 hover:border-green-500"
+          className="border rounded p-1 hover:border-green-500 transform hover:scale-105 transition-transform dark:text-black font-bold"
           onClick={() => table.setPageIndex(0)}
           disabled={!table.getCanPreviousPage()}
         >
           {"<<"}
         </button>
         <button
-          className="border rounded p-1 hover:border-green-500"
+          className="border rounded p-1 hover:border-green-500 dark:text-black font-bold"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           {"<"}
         </button>
         <button
-          className="border rounded p-1 hover:border-green-500"
+          className="border rounded p-1 hover:border-green-500 dark:text-black font-bold"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
           {">"}
         </button>
         <button
-          className="border rounded p-1 hover:border-green-500"
+          className="border rounded p-1 hover:border-green-500 dark:text-black font-bold"
           onClick={() => table.setPageIndex(table.getPageCount() - 1)}
           disabled={!table.getCanNextPage()}
         >
           {">>"}
         </button>
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-1 dark:text-black font-bold">
           <div>Page</div>
           <strong>
             {table.getState().pagination.pageIndex + 1} of{" "}
             {table.getPageCount()}
           </strong>
         </span>
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-1 dark:text-black font-bold">
           | Go to page:
           <input
             type="number"
@@ -624,7 +658,7 @@ const ReorderTool = (props: Props) => {
               table.setPageIndex(page);
             }}
             className=" text-center w-20 rounded-lg  border 
-             border-gray-300 focus:outline-none focus:border-green-500 p-1.5 dark:text-white"
+             border-gray-300 focus:outline-none focus:border-green-500 p-[8px] dark:text-white dark:bg-[#2E3B42]"
           />
         </span>
 
@@ -636,7 +670,7 @@ const ReorderTool = (props: Props) => {
           <SelectTrigger
             className=" w-[110px]  p-2  text-gray-900 border border-gray-300 rounded-lg 
            focus:ring-green-500 focus:border-green-500  dark:border-gray-600
-           dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500 text-md"
+           dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500 text-md dark:bg-[#2E3B42]"
           >
             <SelectValue
               placeholder={`Show ${table.getState().pagination.pageSize}`}
@@ -648,7 +682,7 @@ const ReorderTool = (props: Props) => {
                 <SelectItem
                   key={pageSize}
                   value={`${pageSize}`}
-                  className="text-md focus:bg-green-500"
+                  className="text-md focus:bg-green-500 "
                 >
                   Show {pageSize}
                 </SelectItem>
@@ -657,7 +691,12 @@ const ReorderTool = (props: Props) => {
           </SelectContent>
         </Select>
         <form>
-          <button type="submit" className="ml-3 font-bold hover:text-green-500 p-1  ">reload</button>
+          <button
+            type="submit"
+            className="ml-3 font-bold  p-1 dark:text-[#2E3B42] dark:hover:text-green-500 hover:text-green-500"
+          >
+            reload
+          </button>
         </form>
       </div>
       <div className="flex-1 text-sm text-muted-foreground">

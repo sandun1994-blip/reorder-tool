@@ -39,7 +39,7 @@ const SignupPage = () => {
   });
   return (
     <div className="m-2 border rounded overflow-hidden shadow">
-      <div className="p-2 bg-gradient-to-b from-white to-slate-200 text-slate-600">
+      {/* <div className="p-2 bg-gradient-to-b from-white to-slate-200 text-slate-600">
         Sign up
       </div>
       <div className="p-2 flex flex-col gap-6">
@@ -69,7 +69,7 @@ const SignupPage = () => {
             Cancel
           </Link>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

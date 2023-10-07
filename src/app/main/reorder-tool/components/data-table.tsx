@@ -43,12 +43,12 @@ const ReorderDataTable = <TData, TValue>({
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
   return (
-    <div className="bg-white dark:bg-black  rounded-2xl ">
-      <Table className="border rounded-lg" 
+    <div className="bg-white dark:bg-slate-800  rounded-2xl ">
+      <Table className=" rounded-lg dark:text-black" 
             style= {{ width: resizeMode?table.getCenterTotalSize():'',
             }}
           >
-        <TableHeader className="m-10 bg-green-600 shadow-2xl rounded-lg hover:opacity-100 ">
+        <TableHeader className="m-10  shadow-2xl rounded-lg  ">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -56,7 +56,7 @@ const ReorderDataTable = <TData, TValue>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="text-center text-xs border px-2 py-2 border-green-200 text-black font-semibold   dark:text-white "
+                    className="text-center text-xs border px-2 py-2 bg-gradient-to-b from-blue-500 to-blue-300 shadow-2xl text-black font-semibold    "
                     style={{
                       width: header.getSize(),
                     }}
@@ -118,11 +118,11 @@ const ReorderDataTable = <TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody className="border border-green-200 font-semibold">
+        <TableBody className="border  font-semibold">
           {table.getRowModel().rows?.length > 0 ? (
             table.getRowModel().rows.map((row) => (
               <Fragment key={row.id}>
-                <TableRow key={row.id} className="border border-green-200">
+                <TableRow key={row.id} className="border bg-gradient-to-b from-blue-200 to-blue-100">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
@@ -165,22 +165,7 @@ const ReorderDataTable = <TData, TValue>({
             </TableRow>
           )}
         </TableBody>
-        {/* <tfoot>
-          {table.getFooterGroups().map((footerGroup) => (
-            <tr key={footerGroup.id}>
-              {footerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.footer,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </tfoot> */}
+        
       </Table>
     </div>
   );
