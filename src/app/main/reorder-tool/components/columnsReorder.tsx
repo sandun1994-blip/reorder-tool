@@ -110,33 +110,16 @@ export const columns = [
                   primary: "#22C55E",
                 },
               })}
-              classNames={{
-                control: (state) =>
-                  state.isFocused ? "border-red-600" : "border-red-300",
-                input: () => "text-red-500 ",
-                menuList(props) {
-                  return " ";
-                },
-                groupHeading(props) {
-                  return "bg-yellow-400";
-                },
-                menu: () => "bg-red-400",
-                indicatorsContainer(props) {
-                  return "text-red-400";
-                },
-                valueContainer: () => " rounded-md  dark:text-white  ",
-                dropdownIndicator: () => "bg-green-2s00",
-                group(props) {
-                  return "bg-red-500";
-                },
-                menuPortal: () => "bg-red-500",
-                option: () => "text-red-500",
-                singleValue(props) {
-                  return "text-green-500";
-                },
-                placeholder: () => "text-green-500",
-                multiValueLabel: () => "text-red-500",multiValue:()=>'text-red-500 bg-black',indicatorSeparator:()=>'text-green-400'
-              }}
+              styles={{ control: base => ({
+                ...base,
+                border: 1,
+                // This line disable the blue border
+                boxShadow: 'none',
+                borderRadius:'5px',
+                
+               
+              })}}
+              className="text-black focus:outline-none  shadow-xl rounded border border-gray-400 dark:border-gray-400 focus:border-gray-400"
               id={row.id}
               defaultValue={option}
               onChange={handle}
@@ -162,7 +145,7 @@ export const columns = [
       return (
         <>
           {original.fromLoc > 0 ? (
-            <Button variant={"outline"} size={"sm"} onClick={handleClick} className="border-gray-400 dark:bg-slate-600 dark:text-white rounded">
+            <Button variant={"outline"} size={"sm"} onClick={handleClick} className="border-gray-400 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white dark:bg-slate-600 dark:text-white rounded">
               QTY
             </Button>
           ) : (
@@ -293,7 +276,7 @@ export const columns = [
           onChange={(e) => setValue(+e.target.value)}
           onBlur={onBlur}
           type="number"
-          className=" text-end    dark:text-white border    focus:outline-none focus:border-red-500 p-1 rounded dark:bg-slate-600"
+          className=" text-end    dark:text-white border  border-gray-300  focus:outline-none focus:border-red-500 p-1 rounded dark:bg-slate-600"
           style={{ maxWidth: "70px" }}
         />
       );
@@ -371,8 +354,8 @@ export const columns = [
         <div className=" flex items-center justify-center">
           <Dialog open={visible} onOpenChange={setVisible}>
             <DialogTrigger asChild>
-              <Button  className="dark:bg-transparent bg-transparent hover:bg-transparent">
-                <BsPauseCircle size={25} className="cursor-pointer hover:text-green-500 text-black" />
+              <Button  className="dark:bg-transparent bg-transparent hover:bg-transparent ">
+                <BsPauseCircle size={25} className="cursor-pointer rounded hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white text-black font-extrabold" />
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">

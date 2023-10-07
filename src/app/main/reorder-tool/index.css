@@ -70,3 +70,20 @@
     }
   }
   
+
+  h1 {
+    font-family: "Monument extended", "Krona One", sans-serif;
+    font-weight:bolder;
+  }
+  .container {
+    background-color:white
+  }
+  .float-label-input {
+      margin: 32px 0;     
+   }
+  
+  .float-label-input:focus-within label,
+    .float-label-input input:not(:placeholder-shown) + label {
+      transform: translateY(-1.5rem) scale(0.75);
+      background-color: white;
+  }

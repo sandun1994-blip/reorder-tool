@@ -15,10 +15,10 @@ const SignInButton = (props: Props) => {
     return (
       <div className="flex gap-4 ml-auto items-center ">
          <ThemeToggle className="mr-4 dark:bg-white" />
-        <p className="text-sky-600">{session?.user.username}</p>
+        <p className="text-sky-600 font-semibold capitalize">{session?.user.username}</p>
         <Link
           href={"/api/auth/signout"}
-          className="flex gap-4 ml-auto text-red-600"
+          className="flex font-semibold capitalize rounded gap-4 ml-auto p-2 text-red-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white"
         >
           Sign Out
         </Link>
@@ -33,7 +33,7 @@ const SignInButton = (props: Props) => {
       
       <Link
         href={"/api/auth/signin"}
-        className="flex gap-4 ml-auto text-red-600"
+        className="flex font-semibold capitalize rounded gap-4 ml-auto p-2 text-red-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white"
       >
         Sign In
       </Link>

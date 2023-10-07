@@ -43,8 +43,8 @@ const ReorderDataTable = <TData, TValue>({
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
   return (
-    <div className="bg-white dark:bg-slate-800  rounded-2xl ">
-      <Table className=" rounded-lg dark:text-black" 
+    <div className="bg-white dark:bg-slate-800  rounded-2xl shadow-xl">
+      <Table className=" rounded-lg dark:text-black h-fit" 
             style= {{ width: resizeMode?table.getCenterTotalSize():'',
             }}
           >
@@ -56,7 +56,7 @@ const ReorderDataTable = <TData, TValue>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="text-center text-xs border px-2 py-2 bg-gradient-to-b from-blue-500 to-blue-300 shadow-2xl text-black font-semibold    "
+                    className="text-center text-xs border px-2 py-2   text-black font-semibold dark:bg-[#2E3B42] dark:text-white   "
                     style={{
                       width: header.getSize(),
                     }}
@@ -122,7 +122,7 @@ const ReorderDataTable = <TData, TValue>({
           {table.getRowModel().rows?.length > 0 ? (
             table.getRowModel().rows.map((row) => (
               <Fragment key={row.id}>
-                <TableRow key={row.id} className="border bg-gradient-to-b from-blue-200 to-blue-100">
+                <TableRow key={row.id} className="border dark:bg-white border-b-2 border-b-gray-300">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}

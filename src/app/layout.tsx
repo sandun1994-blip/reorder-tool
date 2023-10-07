@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <Providers>
-        <body className={cn(inter.className,'dark:bg-white')}>
+        <body className={cn(inter.className,'dark:bg-[#F5F6F8] bg-[#F5F6F8]')}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <ToasterContext />
             {/* <AppBar /> */}

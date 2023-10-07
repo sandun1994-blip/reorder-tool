@@ -72,6 +72,7 @@ import { BsExclude, BsFillPauseBtnFill, BsFillSendFill } from "react-icons/bs";
 import { BiSolidReport } from "react-icons/bi";
 import { IoIosListBox, IoMdRefreshCircle, IoMdResize } from "react-icons/io";
 import { Card, CardContent } from "@/components/ui/card";
+import { IoSearchCircle } from "react-icons/io5";
 
 declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
@@ -389,19 +390,34 @@ const ReorderTool = (props: Props) => {
       <div className="mx-3 ">
         <div
           className=" flex justify-between items-center pt-4
-       bg-white rounded-lg shadow-xl p-6 dark:bg-[#2E3B42] "
+       bg-white rounded-lg shadow-xl p-6 dark:bg-[#2E3B42] border-gray-400"
         >
-          <div className="flex justify-center items-center gap-4 ">
-            {" "}
-            <FcSearch size={35} />
-            <Input
-              type="text"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="max-w-sm border-gray-400 dark:bg-current rounded"
-            />
+          <div className="rounded-md  ">
+            <label
+              htmlFor="search"
+              className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
+            >
+              Search
+            </label>
+            <div className="relative ">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <IoSearchCircle color={"gray"} size={25} />
+              </div>
+              <input
+                type="search"
+                id="search"
+                className="block w-full p-2 pl-10 text-sm text-gray-900 border
+         border-gray-400 rounded-lg bg-gray-50 focus:ring-[#B4B4B3] focus:border-[#B4B4B3]
+          dark:bg-white dark:border-gray-600 dark:placeholder-gray-400 dark:text-black
+           dark:focus:ring-[#B4B4B3] dark:focus:border-[#B4B4B3] focus:outline-none  shadow-md"
+                value={searchValue}
+                placeholder="Search..."
+                onChange={(e) => setSearchValue(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="z-50">
+
+          <div className="z-50 hidden md:flex">
             {" "}
             <SelectComp
               id={"loc-filter"}
@@ -475,7 +491,7 @@ const ReorderTool = (props: Props) => {
                     <Button
                       variant={"outline"}
                       onClick={() => downloadToExcel(data)}
-                      className="rounded-lg w-40 text-left border border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white text-left border border-gray-300  hover:border-green-500 transform hover:scale-105 transition-transform"
                     >
                       Download
                     </Button>
@@ -489,7 +505,7 @@ const ReorderTool = (props: Props) => {
                       onClick={() => {
                         sendOrder(table, toast, setSending, supplierData);
                       }}
-                      className="rounded-lg w-40 text-left border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 text-left border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Send Orders
                     </Button>
@@ -503,7 +519,7 @@ const ReorderTool = (props: Props) => {
                       onClick={() => {
                         sendTransfers(table, toast, setSending, supplierData);
                       }}
-                      className="rounded-lg w-40 text-left border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 text-left border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Transfer
                     </Button>
@@ -517,7 +533,7 @@ const ReorderTool = (props: Props) => {
                       onClick={() => {
                         sendWorkOrder(table, toast, setSending, supplierData);
                       }}
-                      className="rounded-lg w-40 text-left border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 text-left border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Work Order
                     </Button>
@@ -531,7 +547,7 @@ const ReorderTool = (props: Props) => {
                       onClick={() => {
                         setSnoozeVisible(true);
                       }}
-                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Snoozed Items
                     </Button>
@@ -543,7 +559,7 @@ const ReorderTool = (props: Props) => {
                     <Button
                       variant={"outline"}
                       onClick={() => {}}
-                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Exclude Items
                     </Button>
@@ -555,7 +571,7 @@ const ReorderTool = (props: Props) => {
                     <Button
                       variant={"outline"}
                       onClick={() => {}}
-                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 border-gray-300 0 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Report One
                     </Button>
@@ -568,7 +584,7 @@ const ReorderTool = (props: Props) => {
                     <Button
                       variant={"outline"}
                       onClick={() => {}}
-                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Refresh
                     </Button>
@@ -583,7 +599,7 @@ const ReorderTool = (props: Props) => {
                       onClick={() => {
                         setResizemode((pre) => !pre);
                       }}
-                      className="rounded-lg w-40 border-gray-300 hover:text-green-500 hover:border-green-500 transform hover:scale-105 transition-transform"
+                      className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Resize Mode
                     </Button>
@@ -610,96 +626,138 @@ const ReorderTool = (props: Props) => {
 
       <div className="h-4" />
 
-      <div className="flex items-center gap-2">
-        <button
-          className="border rounded p-1 hover:border-green-500 transform hover:scale-105 transition-transform dark:text-black font-bold"
-          onClick={() => table.setPageIndex(0)}
-          disabled={!table.getCanPreviousPage()}
-        >
-          {"<<"}
-        </button>
-        <button
-          className="border rounded p-1 hover:border-green-500 dark:text-black font-bold"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          {"<"}
-        </button>
-        <button
-          className="border rounded p-1 hover:border-green-500 dark:text-black font-bold"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          {">"}
-        </button>
-        <button
-          className="border rounded p-1 hover:border-green-500 dark:text-black font-bold"
-          onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-          disabled={!table.getCanNextPage()}
-        >
-          {">>"}
-        </button>
-        <span className="flex items-center gap-1 dark:text-black font-bold">
-          <div>Page</div>
-          <strong>
-            {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
-          </strong>
-        </span>
-        <span className="flex items-center gap-1 dark:text-black font-bold">
-          | Go to page:
-          <input
-            type="number"
-            min="1"
-            max={`${table?.getPageCount()}`}
-            defaultValue={table.getState().pagination.pageIndex + 1}
-            onChange={(e) => {
-              const page = e.target.value ? Number(e.target.value) - 1 : 0;
-              table.setPageIndex(page);
-            }}
-            className=" text-center w-20 rounded-lg  border 
-             border-gray-300 focus:outline-none focus:border-green-500 p-[8px] dark:text-white dark:bg-[#2E3B42]"
-          />
-        </span>
+      <nav
+        className="my-3  bg-white rounded-lg 
+      shadow-xl p-6 dark:bg-[#2E3B42] flex items-center justify-between "
+      >
+        <div>
+          <ul className="list-style-none flex">
+            <li>
+              <button
+                className="pointer-events-none relative block rounded bg-transparent
+                hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white
+                px-3 py-1.5 text-sm text-black font-semibold transition-all duration-300 dark:text-neutral-400"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </button>
+            </li>
+            <li>
+              <button
+                className="relative block rounded bg-transparent px-3 py-1.5 text-sm
+                hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white
+                text-black font-bold transition-all duration-300 hover:bg-neutral-100  dark:text-white dark:hover:bg-neutral-700 dark:hover:text-white"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                {"<"}
+              </button>
+            </li>
+            <li aria-current="page">
+              <button
+                className="relative block rounded bg-primary-100
+                hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white
+                text-black  px-3 py-1.5 text-sm font-bold text-primary-700 transition-all duration-300 dark:text-white"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                {">"}
+              </button>
+            </li>
 
-        <Select
-          onValueChange={(val) => {
-            table.setPageSize(Number(val));
-          }}
-        >
-          <SelectTrigger
-            className=" w-[110px]  p-2  text-gray-900 border border-gray-300 rounded-lg 
-           focus:ring-green-500 focus:border-green-500  dark:border-gray-600
-           dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500 text-md dark:bg-[#2E3B42]"
-          >
-            <SelectValue
-              placeholder={`Show ${table.getState().pagination.pageSize}`}
+            <li>
+              <button
+                className="relative block rounded bg-transparent px-3 py-1.5 text-sm
+                 text-black font-bold transition-all duration-300 hover:bg-neutral-100
+                  dark:text-white dark:hover:bg-neutral-700 dark:hover:text-white
+                  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </button>
+            </li>
+
+            <li></li>
+          </ul>
+        </div>
+
+        <div className="hidden md:flex">
+          <span className="flex  text-black font-bold items-center bg-transparent px-3 py-1.5 text-sm  transition-all duration-300 hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-700 dark:hover:text-white">
+            Go to page :
+            <input
+              type="number"
+              min="1"
+              max={`${table?.getPageCount()}`}
+              defaultValue={table.getState().pagination.pageIndex + 1}
+              onChange={(e) => {
+                const page = e.target.value ? Number(e.target.value) - 1 : 0;
+                table.setPageIndex(page);
+              }}
+              className=" block w-16 ml-3  p-2 text-center  text-sm text-gray-900 border
+              border-gray-300 rounded-lg bg-gray-50 focus:ring-[#B4B4B3] focus:border-[#B4B4B3]
+               dark:bg-white dark:border-gray-600 dark:placeholder-gray-400 dark:text-black
+                dark:focus:ring-[#B4B4B3] dark:focus:border-[#B4B4B3] focus:outline-none  shadow-md"
             />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup className=" ">
-              {[10, 20, 30, 40, 50].map((pageSize) => (
-                <SelectItem
-                  key={pageSize}
-                  value={`${pageSize}`}
-                  className="text-md focus:bg-green-500 "
-                >
-                  Show {pageSize}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <form>
-          <button
-            type="submit"
-            className="ml-3 font-bold  p-1 dark:text-[#2E3B42] dark:hover:text-green-500 hover:text-green-500"
+          </span>
+        </div>
+        <div>
+          <Select
+            onValueChange={(val) => {
+              table.setPageSize(Number(val));
+            }}
           >
-            reload
-          </button>
-        </form>
-      </div>
-      <div className="flex-1 text-sm text-muted-foreground">
+            <SelectTrigger
+              className=" w-[110px]  p-2   border border-gray-300 rounded-lg 
+           focus:outline-none   dark:border-gray-600
+           dark:placeholder-gray-400 dark:text-white dark:focus:outline-none dark:focus:border-whi 
+           text-md dark:bg-[#2E3B42] "
+            >
+              <SelectValue
+                placeholder={`Show ${table.getState().pagination.pageSize}`}
+                className=" font-bold"
+              />
+            </SelectTrigger>
+            <SelectContent className="text-md  dark:bg-[#2E3B42]  font-bold">
+              <SelectGroup className=" dark:bg-[#2E3B42]  font-bold">
+                {[10, 20, 30, 40, 50].map((pageSize) => (
+                  <SelectItem
+                    key={pageSize}
+                    value={`${pageSize}`}
+                    className="text-md  font-bold hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white dark:bg-[#2E3B42]"
+                  >
+                    Show {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex fle">
+          <span className="flex items-center gap-1 pointer-events-none relative  rounded bg-transparent px-3 py-1.5 text-sm text-neutral-500 transition-all duration-300 dark:text-neutral-400">
+            <div>Page</div>
+            <strong>
+              {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </strong>
+          </span>
+          <form>
+            <button
+              type="submit"
+              className="ml-3  relative  rounded bg-transparent px-3 
+            py-1.5 text-sm text-neutral-500 transition-all duration-300
+            cursor-pointer dark:text-neutral-400 
+            hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white"
+            >
+              Reload
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <div className="flex-1 text-sm  text-blue-600 font-bold dark:text-blue-600">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected
       </div>

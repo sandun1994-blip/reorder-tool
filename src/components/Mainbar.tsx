@@ -13,7 +13,7 @@ const Mainbar = ({ childrenMain }: Props) => {
   const [menuVisible, setMenuVisible] = useState(true);
   return (
     <>
-      <div className={cn(`h-[80px] shadow-xl `, menuVisible && "md:pl-80")}>
+      <div className={cn(`h-[80px]  `, menuVisible && "md:pl-80")}>
         <Navbar setMenuVisible={setMenuVisible} />
       </div>
       {menuVisible && (
