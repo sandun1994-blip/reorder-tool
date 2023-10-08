@@ -28,10 +28,11 @@ import {
   getLocations,
   getStockOrder,
   getSupplier,
+  isCreateWorkOrder,
 } from "./lib/lib";
 
 import ReorderDataTable from "./components/data-table";
-import { Input } from "@/components/ui/input";
+
 
 import {
   DropdownMenu,
@@ -288,9 +289,17 @@ const ReorderTool = (props: Props) => {
       updateData: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
-        setData((old) =>
-          old.map((row, index) => {
+        setData((old:any) =>
+          old.map((row:any, index:any) => {
             if (index === rowIndex) {
+              if (old[rowIndex]?.billomatHdr) {
+                return {
+                  ...old[rowIndex],
+                  [columnId]: value,
+                  isCreateWorkOrder:isCreateWorkOrder({...old[rowIndex],calcReOrd:value})
+                };
+                
+              }
               return {
                 ...old[rowIndex],
                 [columnId]: value,
@@ -373,18 +382,17 @@ const ReorderTool = (props: Props) => {
   return (
     <div className="pr-5 pl-5 py-5 shadow-2xl  h-full ml-5 rounded-md">
       <>
-        <SnoozeItems
-          details={pauseItems}
-          setDetails={setPauseItems}
+    
+      {  snoozeVisible &&<SnoozeItems
           setSnoozeVisible={setSnoozeVisible}
           snoozeVisible={snoozeVisible}
           setSnoozeRemoveData={setSnoozeRemoveData}
-        />
-        <WarehouseComp
+        />}
+      {  chartModal && <WarehouseComp
           chartModal={chartModal}
           setChartModal={setChartModal}
           details={wareHouseData}
-        />
+        />}
       </>
 
       <div className="mx-3 ">
@@ -715,8 +723,8 @@ const ReorderTool = (props: Props) => {
            text-md dark:bg-[#2E3B42] "
             >
               <SelectValue
-                placeholder={`Show ${table.getState().pagination.pageSize}`}
-                className=" font-bold"
+                placeholder={`show ${table.getState().pagination.pageSize}`}
+                className=" font-bold "
               />
             </SelectTrigger>
             <SelectContent className="text-md  dark:bg-[#2E3B42]  font-bold">
@@ -727,7 +735,7 @@ const ReorderTool = (props: Props) => {
                     value={`${pageSize}`}
                     className="text-md  font-bold hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white dark:bg-[#2E3B42]"
                   >
-                    Show {pageSize}
+                    show {pageSize}
                   </SelectItem>
                 ))}
               </SelectGroup>

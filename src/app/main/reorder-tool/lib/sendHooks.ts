@@ -109,7 +109,7 @@ export const sendWorkOrder = async (
     orderData.filter((item: any) => Number(item.original.calcReOrd) <= 0 || item.original.calcReOrd=== undefined )
       .length > 0 
   ) {
-    toast.warning("Reorder Value Should Be Greather Than 0 ", {
+    toast.warning("Reorder Value Should Be Greater Than 0 ", {
       position: "top-center",
       theme: "colored",
     });
@@ -132,7 +132,7 @@ export const sendWorkOrder = async (
     orderData.filter((item: any) => item.original.isCreateWorkOrder===false )
       .length > 0 
   ) {
-    toast.warning("There is no enough item built  WO ", {
+    toast.warning("There is no enough itembeing built  WO ", {
       position: "top-center",
       theme: "colored",
     });
@@ -167,7 +167,7 @@ export const sendWorkOrder = async (
 console.log(res.data);
 
     toast.update(id, {
-      render: "Created",
+      render: "Completed",
       isLoading: false,
       autoClose: 1000,
       hideProgressBar: false,
@@ -176,7 +176,7 @@ console.log(res.data);
       draggable: true,
       progress: undefined,
       theme: "colored",
-      type: "success",
+      type: "info",
     });
 
     const popupTost = (time: number, element: any) => {
@@ -253,10 +253,9 @@ export const sendTransfers = async ( table: any,
     return;
   }
   if (
-    orderData.filter((item:any) => Number(item.original.calcReOrd) <= 0).length >
-    0
+    orderData.filter((item:any) => Number(item.original.calcReOrd) <= 0).length >0
   ) {
-    toast.warning("Reorder Value Should Be Greather Than 0", {
+    toast.warning("Reorder Value Should Be Greater Than 0", {
       position: "top-center",
       theme: "colored",
     });
@@ -268,9 +267,10 @@ export const sendTransfers = async ( table: any,
     .filter((item1:any) => item1.calcReOrd > 0)
     .map((subItem: any) => {
       const isChectItemWithCode = subItem.stockItem.supplierStockItems.find(
-        ({ supplierAccount, stockCode }: any) =>
-          supplierAccount.accNo === subItem.name.accNo &&
-          stockCode === subItem.stockCode
+        ({ supplierAccount, stockCode,supplierCode }: any) =>
+        supplierAccount.accNo === subItem.name.accNo &&
+        stockCode?.toLowerCase().trim() === subItem.stockCode?.toLowerCase().trim() &&
+        supplierCode?.toLowerCase().trim() === subItem.supplierCode?.toLowerCase().trim()
       );
 
       if (isChectItemWithCode) {
@@ -278,7 +278,7 @@ export const sendTransfers = async ( table: any,
           ...subItem,
           supplierAccount: isChectItemWithCode.supplierAccount,
           supplierNumber: isChectItemWithCode.supplierAccount.accNo,
-          supplierCode: isChectItemWithCode.supplierCode,
+          supplierCode: isChectItemWithCode?.supplierCode,
         };
       } else if (
         supplierData.find((sup: any) => {
@@ -322,7 +322,7 @@ export const sendTransfers = async ( table: any,
 console.log(res);
 
     toast.update(id, {
-      render: "Created",
+      render: "Completed",
       isLoading: false,
       autoClose: 1000,
       hideProgressBar: false,
@@ -331,7 +331,7 @@ console.log(res);
       draggable: true,
       progress: undefined,
       theme: "colored",
-      type: "success",
+      type: "info",
     });
 
     const popupTost = (time: number, element: any) => {
@@ -409,10 +409,9 @@ export const sendOrder = async (table: any,
     return;
   }
   if (
-    orderData.filter((item:any) => Number(item.original.calcReOrd) <= 0).length >
-    0 
+    orderData.filter((item:any) => Number(item.original.calcReOrd) <= 0).length >  0 
   ) {
-    toast.warning("Reorder Value Should Be Greather Than 0", {
+    toast.warning("Reorder Value Should Be Greater Than 0", {
       position: "top-center",
       theme: "colored",
     });
@@ -426,9 +425,10 @@ export const sendOrder = async (table: any,
     .filter((item1:any) => item1.calcReOrd > 0)
     .map((subItem: any) => {
       const isChectItemWithCode = subItem.stockItem.supplierStockItems.find(
-        ({ supplierAccount, stockCode }: any) =>
+        ({ supplierAccount, stockCode,supplierCode}: any) =>
           supplierAccount.accNo === subItem.name.accNo &&
-          stockCode === subItem.stockCode
+          stockCode?.toLowerCase().trim() === subItem.stockCode?.toLowerCase().trim() &&
+          supplierCode?.toLowerCase().trim() === subItem.supplierCode?.toLowerCase().trim()
       );
 
       if (isChectItemWithCode) {

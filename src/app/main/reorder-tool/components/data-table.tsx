@@ -136,11 +136,11 @@ const ReorderDataTable = <TData, TValue>({
                   ))}
                 </TableRow>
                 {row.getIsExpanded() && (
-                  <TableRow className="border border-green-200">
+                  <TableRow className="border dark:bg-white">
                     {/* 2nd row is a custom 1 cell row */}
                     <TableCell
                       colSpan={row.getVisibleCells().length}
-                      className="h-24 text-center"
+                      className="h-24 text-center "
                     >
                       <ExpandComp supData={supData} mainDataItem={row.original}/>
                     </TableCell>
@@ -153,7 +153,7 @@ const ReorderDataTable = <TData, TValue>({
                <TableCell colSpan={columns.length} className="h-24">
                 <div className=" flex justify-center items-center p-3">
                 <RotatingLines
-                  strokeColor="green"
+                  strokeColor="blue"
                   strokeWidth="5"
                   animationDuration="0.75"
                   width="96"

@@ -3,20 +3,14 @@
 
 import { FaExclamation } from "react-icons/fa";
 import {
-  Column,
-  ColumnDef,
-  RowData,
-  Table,
   createColumnHelper,
 } from "@tanstack/react-table";
-import React, { HTMLProps, useEffect, useState } from "react";
+import React, {  useState } from "react";
 import ReactSelect from "react-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   MdExpandLess,
   MdExpandMore,
-  MdFilterList,
-  MdFilterListOff,
 } from "react-icons/md";
 import { BsPauseCircle } from "react-icons/bs";
 import { ImCheckmark } from "react-icons/im";

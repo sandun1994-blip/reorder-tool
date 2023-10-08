@@ -1,11 +1,12 @@
-import getCurrentUser from "@/actions/getCurrentUser";
 import { NextRequest, NextResponse } from "next/server";
 import * as jwt from "jsonwebtoken";
 import axios from "axios";
+import getCurrentUserAllData from "@/actions/getUserAllData";
 
 export async function POST(request: NextRequest) {
   try {
-    const token = await getCurrentUser();
+    const data = await getCurrentUserAllData();
+    const token =data?.backendTokens?.accessToken
     const user: any = jwt.verify(
       token as string,
       process.env.JWT_SECRET as string
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      data: { data: body, user },
+      data: { data: body, user:data?.user },
     };
 
     const workOrder = await axios(config);
@@ -30,3 +31,5 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Error", { status: 500 });
   }
 }
+
+// ?.backendTokens?.accessToken

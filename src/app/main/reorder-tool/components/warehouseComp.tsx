@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/Button";
+
 import {
   DialogHeader,
   DialogFooter,
@@ -34,7 +34,7 @@ type Props = {
 const WarehouseComp = ({ setChartModal, chartModal, details }: Props) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-console.log('warehouse');
+
 
   useEffect(() => {
     setLoading(true);

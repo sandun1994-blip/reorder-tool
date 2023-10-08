@@ -5,7 +5,7 @@ import axios from "axios";
 
 export async function POST(request: NextRequest) {
 
-    console.log('pause');
+ 
     
   try {
     const token = await getCurrentUser();
@@ -15,14 +15,14 @@ export async function POST(request: NextRequest) {
     );
 
     const body = await request.json();
-
+    console.log('pause',user);
     const config = {
       method: "POST",
       url: process.env.BASE_URL + "reodertool/addpauseitem",
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      data: {...body,insertBy:user.username      },
+      data: {...body,insertBy:user.name      },
     };
 
     const sendOrder = await axios(config);

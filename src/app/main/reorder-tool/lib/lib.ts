@@ -132,14 +132,16 @@ interface ProductData {
   sales6: number,
   sales0: number,
   calcReOrd: number,
-  select: false,
+  select: boolean,
   nameArray: NameArrayItem[];
   isExpand: boolean;
   isCreateWorkOrder: boolean;
-  supplierCode: string;
+  supplierCode?: string;
   fromLoc?: number;
   workOrder: boolean;
   stockItem: StockItem;
+  stockLocation: any
+  
 }
 
 
@@ -227,26 +229,36 @@ export const processWorkorder = (data: any) => {
   return true;
 };
 
+
 const addSupNames = (data: any, supData: any) => {
   let name: { label: string; value: number }[] = [];
+ 
   const dataArry = data.stockItem?.supplierStockItems;
 
   if (dataArry.length > 0) {
+   
     dataArry.forEach((item: any) => {
-      if (!name.map((acc) => acc.value).includes(item.supplierAccount.accNo)) {
+      
+      
+      if (!name.map((acc) => acc.value).includes(item.supplierAccount.accNo && item.supplierAccount.accNo)) {
+        
         name.push({
           label: item.supplierAccount.name,
           value: item.supplierAccount.accNo,
         });
+        
+        
       }
       if (item.tempLoc) {
+        
+        
         name.push({ label: item.tempLoc, value: item.supplierAccount.accNo });
       }
     });
   } else {
     name = supData;
   }
-
+ 
   if (!name.map((acc) => acc.value).includes(data.accNo)) {
     name.push({ label: data.supplierName, value: data.accNo });
   }
@@ -272,6 +284,8 @@ const addSupNames = (data: any, supData: any) => {
     name.push({ label: "KALGOORLIE WAREHOUSE", value: -1 });
   }
 
+
+
   return name;
 };
 
@@ -283,7 +297,7 @@ const getExclamation = (item: any) => {
   return visible;
 };
 
-const isCreateWorkOrder = (item: any) => {
+export const isCreateWorkOrder = (item: any) => {
   if (item.stockItem?.billomatHdr) {
     let condition = <any>[];
     // const jk=[]
@@ -301,9 +315,11 @@ const isCreateWorkOrder = (item: any) => {
           data?.quantity * Number(item?.calcReOrd)
         ) {
           condition.push(false);
+        }else{
+          condition.push(true);
         }
 
-        condition.push(true);
+        
       });
 
     // console.log(jk);
@@ -315,6 +331,9 @@ const isCreateWorkOrder = (item: any) => {
 };
 
 export const getStockOrder = (item: any[], supData: any, pauseItems: any):ProductData[] => {
+
+ 
+  
   const stockOrder = item
     .filter(
       (item1) =>
@@ -350,7 +369,7 @@ export const getStockOrder = (item: any[], supData: any, pauseItems: any):Produc
         incommingty: e?.incommingty,
         purchOrdQTY: e.purchOrdQTY,
         salesOrdQTY: e.salesOrdQTY,
-        name: { name: e.supplierName, accNo: e.supplierAccount.accNo },
+        name: { name: e.supplierName, accNo:process.env.NEXT_PUBLIC_LOCATION?.includes(e.supplierName)?-1: e.supplierAccount.accNo },
         sName: e.supplierName,
         sales1: e.sales1,
         sales2: e.sales2,
@@ -359,7 +378,7 @@ export const getStockOrder = (item: any[], supData: any, pauseItems: any):Produc
         sales5: e.sales5,
         sales6: e.sales6,
         sales0: e.sales0,
-        calcReOrd: palletQty(e),
+        calcReOrd: Number(palletQty(e)),
         select: false,
         stockItem: e.stockItem,
         supplierCode: e?.supplierCode,
@@ -368,6 +387,7 @@ export const getStockOrder = (item: any[], supData: any, pauseItems: any):Produc
         nameArray: addSupNames(e, supData),
         isExpand: e.stockItem.billomatHdr ? true : false,
         isCreateWorkOrder: isCreateWorkOrder(e),
+        stockLocation:e.stockLocation
       };
     });
 
@@ -393,6 +413,7 @@ export const getStockOrderTwo = (item: any[], supData: any, mainItem: any) => {
           ? 0
           : reOrdQty -
             (data?.incommingty + data?.inStockQTY - data?.salesOrdQTY);
+// console.log(data,e);
 
       return {
         id: i,
@@ -412,7 +433,7 @@ export const getStockOrderTwo = (item: any[], supData: any, mainItem: any) => {
         inStockQTY: data?.inStockQTY,
         purchOrdQTY: data?.purchOrdQTY,
         salesOrdQTY: data?.salesOrdQTY,
-        name: { name: data?.supplierName, accNo: data?.supplierAccount.accNo },
+        name: { name: data?.supplierName, accNo: process.env.NEXT_PUBLIC_LOCATION?.includes(data?.supplierName)?-1: data?.supplierAccount.accNo },
         sName: data?.supplierName,
         incommingty: data?.incommingty,
         sales1: data?.sales1,
@@ -422,12 +443,12 @@ export const getStockOrderTwo = (item: any[], supData: any, mainItem: any) => {
         sales5: data?.sales5,
         sales6: data?.sales6,
         sales0: data?.sales0,
-        calcReOrd: palletQtyTwo(e, calcQty),
+        calcReOrd:Number(palletQtyTwo(e, calcQty)),
         select: false,
         stockItem: e?.stockItem,
         supplierCode: data?.supplierCode,
         fromLoc: data?.centralLocation,
-        nameArray: addSupNames(e, supData),
+        nameArray: addSupNames({...e,accNo:data?.supplierAccount.accNo}, supData),
       };
     });
 

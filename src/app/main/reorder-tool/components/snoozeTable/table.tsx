@@ -36,8 +36,8 @@ const SnozzeDataTable = <TData, TValue>({
   const table = useTable;
   return (
     <div className="shadow-2xl ">
-      <Table className="font-bold">
-        <TableHeader className="m-10">
+      <Table className=" rounded-lg dark:text-black h-fit">
+        <TableHeader className="m-10  shadow-2xl rounded-lg  ">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -45,7 +45,7 @@ const SnozzeDataTable = <TData, TValue>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="text-center text-xs border px-2 py-2 border-gray-400"
+                    className="text-center text-xs border px-2 py-2   text-black font-semibold dark:bg-[#2E3B42] dark:text-white   "
                   >
                     {header.isPlaceholder ? null : (
                       <>
@@ -86,11 +86,11 @@ const SnozzeDataTable = <TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody className="border border-gray-400">
+        <TableBody className="border  font-semibold">
           {table.getRowModel().rows?.length > 0 ? (
             table.getRowModel().rows.map((row) => (
               <Fragment key={row.id}>
-                <TableRow key={row.id} className="border border-gray-400">
+                <TableRow key={row.id} className="border dark:bg-white border-b-2 border-b-gray-300">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
@@ -107,13 +107,13 @@ const SnozzeDataTable = <TData, TValue>({
             ))
           ) : (
             <TableRow >
-              <TableCell colSpan={columns.length} className="h-24">
+              <TableCell colSpan={columns.length} className="">
                 <div className=" flex justify-center items-center p-3">
                 <RotatingLines
-                  strokeColor="green"
+                  strokeColor="blue"
                   strokeWidth="5"
                   animationDuration="0.75"
-                  width="96"
+                  width="75"
                   visible={true}
                 />
                 </div>

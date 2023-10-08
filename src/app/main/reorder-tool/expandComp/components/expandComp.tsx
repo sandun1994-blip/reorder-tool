@@ -54,19 +54,14 @@ import { columnsExpand } from "./columnExpand";
 import { getLocations, getStockOrder, getStockOrderTwo, getSupplier } from "../../lib/lib";
 import { downloadToExcel } from "../../lib/xlsx";
 import ExpandDataTable from "./expandTable";
+import { IoSearchCircle } from "react-icons/io5";
+import SelectComp from "../../components/SelectComp";
+import { ImFolderDownload } from "react-icons/im";
+import { sendOrder, sendTransfers, sendWorkOrder } from "../../lib/sendHooks";
+import { BsFillSendFill } from "react-icons/bs";
+import { IoMdRefreshCircle } from "react-icons/io";
 
-// declare module "@tanstack/table-core" {
-//   interface TableMeta<TData extends RowData> {
-//     editedRows: any;
-//     updateData: (rowIndex: any, columnId: any, value: any) => void;
-//     setEditedRows: any;
-//     addRow: any;
-//     setwareHouseData: any;
-//     setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
-//     updateSelectValue : (rowIndex: any, columnId: any, value: any) => void;
-//     removeRow :  (rowIndex: any, columnId: any) => void;
-//   }
-// }
+
 
 type Props = {
     supData:any 
@@ -134,6 +129,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
   const [wareHouseData, setwareHouseData] = useState({});
   const [chartModal, setChartModal] = useState(false);
   const [sending, setSending] = useState(false);
+  const [soonzeRemoveData, setSnoozeRemoveData] = useState([]);
 
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
@@ -160,7 +156,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
       };
       try {
         const res = await axios(config);
-        console.log(res.data);
+       // console.log(res.data);
         
         const reduceSupData = supData.map((item: any) => ({
           value: item.value,
@@ -190,7 +186,17 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
     };
 
     getAllData();
-  }, []);
+  }, [mainDataItem.calcReOrd]);
+
+
+
+
+
+
+
+
+
+
 
   const table = useReactTable({
     data,
@@ -227,6 +233,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
     meta: {
       editedRows,
       setEditedRows,
+      setSnoozeRemoveData,
       updateData: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         console.log(rowIndex, columnId, value);
@@ -237,7 +244,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
             if (index === rowIndex) {
               return {
                 ...old[rowIndex],
-                [columnId]: value.label,name:value
+                [columnId]: value
               };
             }
             return row;
@@ -254,7 +261,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
               return {
                 ...old[rowIndex],
                 [columnId]: value.label,
-                name: {name:value.label,accNo:value.value},
+                name: { name: value.label, accNo: value.value },
               };
             }
             return row;
@@ -277,7 +284,7 @@ const ExpandComp = ({ supData,mainDataItem}: Props) => {
       setChartModal,
     },
   });
-console.log(data);
+
 
   useEffect(() => {
     const locations = options.map((loc) => loc.value);
@@ -297,576 +304,317 @@ console.log(data);
     //  console.log(table.getFilteredRowModel());
   }, [options, optionsTwo]);
 
-  const sendOrder = async () => {
-    const orderData = table.getFilteredSelectedRowModel().rows;
-    
+ 
 
-    if (orderData.length === 0) {
-      toast.warning("Select At Least One Order", {
-        position: "top-center",
-        theme: "colored",
-      });
-      return;
-    }
-    if (
-      orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length >
-      0
-    ) {
-      toast.warning("Reorder Value Should Be Greather Than 0", {
-        position: "top-center",
-        theme: "colored",
-      });
-      return;
-    }
-
-    setSending(true);
-    const postData = orderData
-      .map((item) => item.original)
-      .filter((item1) => item1.calcReOrd > 0)
-      .map((subItem: any) => {
-        const isChectItemWithCode = subItem.stockItem.supplierStockItems.find(
-          ({ supplierAccount, stockCode }: any) =>
-            supplierAccount.accNo === subItem.name.accNo &&
-            stockCode === subItem.stockCode
-        );
-
-        if (isChectItemWithCode) {
-          return {
-            ...subItem,
-            supplierAccount: isChectItemWithCode.supplierAccount,
-            supplierNumber: isChectItemWithCode.supplierAccount.accNo,
-            supplierCode: isChectItemWithCode.supplierCode,
-          };
-        } else if (
-          supData.find((sup: any) => {
-            return sup.supData.accNo === subItem.name.accNo;
-          })
-        ) {
-          const supAccont: any = supData.find((sup: any) => {
-            return sup.supData.accNo === subItem.name.accNo;
-          });
-
-          if (supAccont) {
-            return {
-              ...subItem,
-              supplierAccount: supAccont.supData,
-              supplierNumber: supAccont.supData.accNo,
-            };
-          }
-          return subItem;
-        } else {
-          return subItem;
-        }
-      });
-
-    
-
-    const idsend = toast.loading(
-      <div className="flex items-center justify-around text-slate-950 font-semibold">
-        <Puff
-          height="50"
-          width="50"
-          radius={1}
-          color="#4fa94d"
-          ariaLabel="puff-loading"
-          wrapperStyle={{}}
-          wrapperClass=""
-          visible={true}
-        />
-        Sending........
-      </div>,
-      { icon: false }
-    );
-
-    try {
-      const config = {
-        method: "post",
-        url: "/api/reordertool/sendorder",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: postData,
-      };
-
-      const res = await axios(config);
-
-  
-
-      toast.update(idsend, {
-        render: "Created",
-        isLoading: false,
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        type: "success",
-      });
-      
-
-      const popupTost = (time: number, element: any) => {
-        setTimeout(() => {
-          if (element.status === "fulfilled") {
-            toast(`PO ${element.value} Created`, {
-              position: "top-right",
-              autoClose: 2000 * time,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              type: "success",
-            });
-          } else {
-            toast("Order is not created", {
-              position: "top-right",
-              autoClose: 2000 * time,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              type: "error",
-            });
-          }
-        }, 1000 * time);
-      };
-      const valu = res.data.map((item: any) => ({
-        ...item,
-        value: item.value.poNumber,
-      }));
-      for (let index = 0; index < valu.length; index++) {
-        const element = valu[index];
-        popupTost(index + 1, element);
-      }
-      setSending(false);
-    } catch (error) {
-      toast.update(idsend, {
-        render: "Internal Error",
-        isLoading: false,
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        type: "error",
-      });
-      console.log(error);
-      setSending(false);
-    }
-  };
-
-  const sendTransfers = async () => {
-    const orderData = table.getFilteredSelectedRowModel().rows;
-
-    if (orderData.length === 0) {
-      toast.warning("Select At Least One Order", {
-        position: "top-center",
-        theme: "colored",
-      });
-      return;
-    }
-    if (
-      orderData.filter((item) => Number(item.original.calcReOrd) <= 0).length >
-      0
-    ) {
-      toast.warning("Reorder Value Should Be Greather Than 0", {
-        position: "top-center",
-        theme: "colored",
-      });
-      return;
-    }
-    setSending(true);
-    const postData = orderData
-      .map((item) => item.original)
-      .filter((item1) => item1.calcReOrd > 0)
-      .map((subItem: any) => {
-        const isChectItemWithCode = subItem.stockItem.supplierStockItems.find(
-          ({ supplierAccount, stockCode }: any) =>
-            supplierAccount.accNo === subItem.name.accNo &&
-            stockCode === subItem.stockCode
-        );
-
-        if (isChectItemWithCode) {
-          return {
-            ...subItem,
-            supplierAccount: isChectItemWithCode.supplierAccount,
-            supplierNumber: isChectItemWithCode.supplierAccount.accNo,
-            supplierCode: isChectItemWithCode.supplierCode,
-          };
-        } else if (
-          supData.find((sup: any) => {
-            return sup.supData.accNo === subItem.name.accNo;
-          })
-        ) {
-          const supAccont: any = supData.find((sup: any) => {
-            return sup.supData.accNo === subItem.name.accNo;
-          });
-
-          if (supAccont) {
-            return {
-              ...subItem,
-              supplierAccount: supAccont.supData,
-              supplierNumber: supAccont.supData.accNo,
-            };
-          }
-          return subItem;
-        } else {
-          return subItem;
-        }
-      });
-
-    
-
-    const id = toast.loading(
-      <div className="flex items-center justify-around text-slate-950 font-semibold">
-        <Puff
-          height="50"
-          width="50"
-          radius={1}
-          color="#4fa94d"
-          ariaLabel="puff-loading"
-          wrapperStyle={{}}
-          wrapperClass=""
-          visible={true}
-        />
-        Sending........
-      </div>,
-      { icon: false }
-    );
-
-    try {
-      const config = {
-        method: "post",
-        url: "/api/reordertool/sendtransfer",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: postData,
-      };
-
-      const res = await axios(config);
-
-      toast.update(id, {
-        render: "Created",
-        isLoading: false,
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        type: "success",
-      });
-
-      const popupTost = (time: number, element: any) => {
-        setTimeout(() => {
-          if (element.status === "fulfilled") {
-            toast(`Stock ${element.value} Created`, {
-              position: "top-right",
-              autoClose: 2000 * time,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              type: "success",
-            });
-          } else {
-            toast("Stock is not created", {
-              position: "top-right",
-              autoClose: 2000 * time,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              type: "error",
-            });
-          }
-        }, 1000 * time);
-      };
-      const valu = res.data.map((item: any) => ({
-        ...item,
-        value: item.value.seqNo,
-      }));
-      for (let index = 0; index < valu.length; index++) {
-        const element = valu[index];
-        popupTost(index + 1, element);
-      }
-      
-      setSending(false);
-    } catch (error) {
-      toast.update(id, {
-        render: "Internal Error",
-        isLoading: false,
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        type: "error",
-      });
-      console.log(error);
-      setSending(false);
-    }
-  };
+ 
 
   return (
-    <div className="pr-5 pl-5 py-5 ">
+    <div className="pr-8 pl-8 py-5 shadow-2xl rounded-md dark:bg-white">
       
        
         
-        <div className="flex justify-between items-center p-5">
-        <div>
-         
-         <Input
-           type="text"
-           value={searchValue}
-           onChange={(e) => setSearchValue(e.target.value)}
-           className="max-w-sm border border-gray-300"
-         />
-       </div>
-       
-        <div className=" ml-3">
-         
-        </div>
-        <div></div>
-
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto" disabled={sending}>
-                Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              className="rounded-lg borrder border-gray-500 "
+      <div className="mx-3 ">
+        <div
+          className=" flex justify-between items-center pt-4
+       bg-white rounded-lg shadow-xl p-6 dark:bg-[#2E3B42] border-gray-400"
+        >
+          <div className="rounded-md  ">
+            <label
+              htmlFor="search"
+              className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
             >
-              <DropdownMenuLabel>Select Columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize cursor-pointer"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value: boolean) => {
-                        column.toggleVisibility(!!value);
-                      }}
+              Search
+            </label>
+            <div className="relative ">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <IoSearchCircle color={"gray"} size={25} />
+              </div>
+              <input
+                type="search"
+                id="search"
+                className="block w-full p-2 pl-10 text-sm text-gray-900 border
+         border-gray-400 rounded-lg bg-gray-50 focus:ring-[#B4B4B3] focus:border-[#B4B4B3]
+          dark:bg-white dark:border-gray-600 dark:placeholder-gray-400 dark:text-black
+           dark:focus:ring-[#B4B4B3] dark:focus:border-[#B4B4B3] focus:outline-none  shadow-md"
+                value={searchValue}
+                placeholder="Search..."
+                onChange={(e) => setSearchValue(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* <div className="z-50 hidden md:flex">
+            {" "}
+            <SelectComp
+              id={"loc-filter-2"}
+              options={options}
+              setOptions={setOptions}
+              optionArray={optionsArray}
+              setGlobalFilter={setGlobalFilter}
+            />
+          </div> */}
+
+          <div></div>
+
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="ml-auto border-gray-400 dark:bg-[#2E3B42] rounded transform hover:scale-105 transition-transform dark:text-white"
+                  disabled={sending}
+                >
+                  Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="end"
+                className="rounded-lg borrder border-gray-500 "
+              >
+                <DropdownMenuLabel>Select Columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize cursor-pointer transform hover:scale-105 transition-transform"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value: boolean) => {
+                          column.toggleVisibility(!!value);
+                        }}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={sending}
+                  className="shadow-lg dark:bg-[#2E3B42] rounded border-gray-400
+                  transform hover:scale-110 transition-transform dark:text-white"
+                >
+                  Actions
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="rounded-lg borrder border-gray-300 w-56">
+                <DropdownMenuLabel className="flex justify-center items-center text-black font-bold dark:text-white">
+                  Select Action{" "}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => downloadToExcel(data)}
+                      className="rounded-lg w-40 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white text-left border border-gray-300  hover:border-green-500 transform hover:scale-105 transition-transform"
                     >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={sending}>
-                Actions
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="rounded-lg borrder border-gray-300 w-56">
-              <DropdownMenuLabel className="">Select Action</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => downloadToExcel(data)}
-                    className="rounded-lg w-40 text-left"
-                  >
-                    Download
-                  </Button>
-                  <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={sendOrder}
-                    className="rounded-lg w-40 text-left"
-                  >
-                    Send Orders
-                  </Button>
-                  <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={sendTransfers}
-                    className="rounded-lg w-40 text-left"
-                  >
-                    Transfer
-                  </Button>
-                  <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {}}
-                    className="rounded-lg w-40 text-left"
-                  >
-                    Work Order
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {}}
-                    className="rounded-lg w-40"
-                  >
-                    Snoozed Items
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {}}
-                    className="rounded-lg w-40"
-                  >
-                    Exclude Items
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {}}
-                    className="rounded-lg w-40"
-                  >
-                    Report One
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {}}
-                    className="rounded-lg w-40"
-                  >
-                    Refresh
-                  </Button>
-                  <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-            </DropdownMenuContent>
-          </DropdownMenu>
+                      Download
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <ImFolderDownload size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {
+                        sendOrder(table, toast, setSending, supData);
+                      }}
+                      className="rounded-lg w-40 text-left border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
+                    >
+                      Send Orders
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <BsFillSendFill size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {
+                        sendTransfers(table, toast, setSending, supData);
+                      }}
+                      className="rounded-lg w-40 text-left border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
+                    >
+                      Transfer
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <BsFillSendFill size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                 
+                  
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"outline"}
+                      onClick={() => {}}
+                      className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
+                    >
+                      Refresh
+                    </Button>
+                    <DropdownMenuShortcut>
+                      <IoMdRefreshCircle size={25} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
        
         
-      <div className=" p-1">
-        <ExpandDataTable useTable={table} data={data} columns={columnsExpand} />
+      <div className=" p-3 shadow-2xl  overflow-x-auto ">
+        <ExpandDataTable 
+        useTable={table} data={data} columns={columnsExpand}  supData={supData} />
       </div>
 
       <div className="h-4" />
 
-      <div className="flex items-center gap-2">
-        <button
-          className="border rounded p-1 hover:border-green-500"
-          onClick={() => table.setPageIndex(0)}
-          disabled={!table.getCanPreviousPage()}
-        >
-          {"<<"}
-        </button>
-        <button
-          className="border rounded p-1 hover:border-green-500"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          {"<"}
-        </button>
-        <button
-          className="border rounded p-1 hover:border-green-500"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          {">"}
-        </button>
-        <button
-          className="border rounded p-1 hover:border-green-500"
-          onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-          disabled={!table.getCanNextPage()}
-        >
-          {">>"}
-        </button>
-        <span className="flex items-center gap-1">
-          <div>Page</div>
-          <strong>
-            {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
-          </strong>
-        </span>
-        <span className="flex items-center gap-1">
-          | Go to page:
-          <input
-            type="number"
-            min="1"
-            max={`${table?.getPageCount()}`}
-            defaultValue={table.getState().pagination.pageIndex + 1}
-            onChange={(e) => {
-              const page = e.target.value ? Number(e.target.value) - 1 : 0;
-              table.setPageIndex(page);
-            }}
-            className=" text-center w-20 rounded-lg  border 
-             border-gray-300 focus:outline-none focus:border-green-500 p-1.5 dark:text-white"
-          />
-        </span>
+      <nav
+        className="my-3  bg-white rounded-lg 
+      shadow-xl p-6 dark:bg-[#2E3B42] flex items-center justify-between "
+      >
+        <div>
+          <ul className="list-style-none flex">
+            <li>
+              <button
+                className="pointer-events-none relative block rounded bg-transparent
+                hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white
+                px-3 py-1.5 text-sm text-black font-semibold transition-all duration-300 dark:text-neutral-400"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </button>
+            </li>
+            <li>
+              <button
+                className="relative block rounded bg-transparent px-3 py-1.5 text-sm
+                hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white
+                text-black font-bold transition-all duration-300 hover:bg-neutral-100  dark:text-white dark:hover:bg-neutral-700 dark:hover:text-white"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                {"<"}
+              </button>
+            </li>
+            <li aria-current="page">
+              <button
+                className="relative block rounded bg-primary-100
+                hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white
+                text-black  px-3 py-1.5 text-sm font-bold text-primary-700 transition-all duration-300 dark:text-white"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                {">"}
+              </button>
+            </li>
 
-        <Select
-          onValueChange={(val) => {
-            table.setPageSize(Number(val));
-          }}
-        >
-          <SelectTrigger
-            className=" w-[110px]  p-2  text-gray-900 border border-gray-300 rounded-lg 
-           focus:ring-green-500 focus:border-green-500  dark:border-gray-600
-           dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500 text-md"
-          >
-            <SelectValue
-              placeholder={`Show ${table.getState().pagination.pageSize}`}
+            <li>
+              <button
+                className="relative block rounded bg-transparent px-3 py-1.5 text-sm
+                 text-black font-bold transition-all duration-300 hover:bg-neutral-100
+                  dark:text-white dark:hover:bg-neutral-700 dark:hover:text-white
+                  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </button>
+            </li>
+
+            <li></li>
+          </ul>
+        </div>
+
+        <div className="hidden md:flex">
+          <span className="flex  text-black font-bold items-center bg-transparent px-3 py-1.5 text-sm  transition-all duration-300 hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-700 dark:hover:text-white">
+            Go to page :
+            <input
+              type="number"
+              min="1"
+              max={`${table?.getPageCount()}`}
+              defaultValue={table.getState().pagination.pageIndex + 1}
+              onChange={(e) => {
+                const page = e.target.value ? Number(e.target.value) - 1 : 0;
+                table.setPageIndex(page);
+              }}
+              className=" block w-16 ml-3  p-2 text-center  text-sm text-gray-900 border
+              border-gray-300 rounded-lg bg-gray-50 focus:ring-[#B4B4B3] focus:border-[#B4B4B3]
+               dark:bg-white dark:border-gray-600 dark:placeholder-gray-400 dark:text-black
+                dark:focus:ring-[#B4B4B3] dark:focus:border-[#B4B4B3] focus:outline-none  shadow-md"
             />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup className=" ">
-              {[10, 20, 30, 40, 50].map((pageSize) => (
-                <SelectItem
-                  key={pageSize}
-                  value={`${pageSize}`}
-                  className="text-md focus:bg-green-500"
-                >
-                  Show {pageSize}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex-1 text-sm text-muted-foreground">
+          </span>
+        </div>
+        <div>
+          <Select
+            onValueChange={(val) => {
+              table.setPageSize(Number(val));
+            }}
+          >
+            <SelectTrigger
+              className=" w-[110px]  p-2   border border-gray-300 rounded-lg 
+           focus:outline-none   dark:border-gray-600
+           dark:placeholder-gray-400 dark:text-white dark:focus:outline-none dark:focus:border-whi 
+           text-md dark:bg-[#2E3B42] "
+            >
+              <SelectValue
+                placeholder={`show ${table.getState().pagination.pageSize}`}
+                className=" font-bold "
+              />
+            </SelectTrigger>
+            <SelectContent className="text-md  dark:bg-[#2E3B42]  font-bold">
+              <SelectGroup className=" dark:bg-[#2E3B42]  font-bold">
+                {[10, 20, 30, 40, 50].map((pageSize) => (
+                  <SelectItem
+                    key={pageSize}
+                    value={`${pageSize}`}
+                    className="text-md  font-bold hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white dark:bg-[#2E3B42]"
+                  >
+                    show {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex fle">
+          <span className="flex items-center gap-1 pointer-events-none relative  rounded bg-transparent px-3 py-1.5 text-sm text-neutral-500 transition-all duration-300 dark:text-neutral-400">
+            <div>Page</div>
+            <strong>
+              {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </strong>
+          </span>
+          <form>
+            <button
+              type="submit"
+              className="ml-3  relative  rounded bg-transparent px-3 
+            py-1.5 text-sm text-neutral-500 transition-all duration-300
+            cursor-pointer dark:text-neutral-400 
+            hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white"
+            >
+              Reload
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <div className="flex-1 text-sm  text-blue-600 font-bold dark:text-blue-600">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected
       </div>

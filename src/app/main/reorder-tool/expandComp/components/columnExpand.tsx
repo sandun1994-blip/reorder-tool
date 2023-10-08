@@ -1,28 +1,15 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
-
-import { FcExpand, FcHighPriority } from "react-icons/fc";
 import {
-  Column,
-  ColumnDef,
-  RowData,
-  Table,
   createColumnHelper,
 } from "@tanstack/react-table";
-import React, { HTMLProps, useEffect, useState } from "react";
+import React, { useState } from "react";
 import ReactSelect from "react-select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MdExpandLess, MdExpandMore, MdFilterList, MdFilterListOff } from "react-icons/md";
-import { Button } from "@/components/ui/button";
 
-declare module "@tanstack/react-table" {
-  //   interface TableMeta<TData extends RowData> {
-  //     updateData: (rowIndex: number, columnId: string, value: unknown) => void;
-  //   }
-  interface ColumnMeta<TData extends unknown, TValue> {
-    filterVisible: any;
-  }
-}
+
+
+
 
 const columnHelper = createColumnHelper<any>();
 
@@ -42,33 +29,29 @@ export const columnsExpand = [
         value: row.original?.name.accNo,
         label: row.original?.name.name,
       });
-      
+
       // When the input is blurred, we'll call our table meta's updateData function
 
       // If the initialValue is changed external, sync it up with our state
       React.useEffect(() => {
-       setOption({value: row.original?.name.accNo,label: row.original?.name.name});
-      }, [row.original?.name.accNo, row.original?.name.name]);
-
+        setOption(pre=>({...pre,
+          value: row.original?.name.accNo,
+          label: row.original?.name.name,
+        }));
+           
+      }, [row.original.name, row.original.sName]);
+     
       //  console.log('updated');
       const handle = (val: any) => {
         table.options.meta?.updateSelectValue(row.index, id, val);
       };
-      
-      
 
-      const options =
-        row.original.nameArray &&
-        row.original.nameArray
-        
+      const options = row.original.nameArray && row.original.nameArray;
+
       return (
         <>
-          <div style={{ width: "200px" }}>
+          <div style={{ width: "200px", }}>
             <ReactSelect
-              id={row.id}
-              defaultValue={option}
-              onChange={handle}
-              options={options}
               theme={(theme) => ({
                 ...theme,
                 borderRadius: 1,
@@ -79,33 +62,20 @@ export const columnsExpand = [
                   primary: "#22C55E",
                 },
               })}
-              classNames={{
-                control: (state) =>
-                  state.isFocused ? "border-red-600" : "border-red-300",
-                input: () => "text-red-500 ",
-                menuList(props) {
-                  return "dark:bg-gray-600 ";
-                },
-                groupHeading(props) {
-                  return "bg-yellow-400";
-                },
-                menu: () => "bg-red-400",
-                indicatorsContainer(props) {
-                  return "text-red-400";
-                },
-                valueContainer: () => " rounded-md  dark:text-white  ",
-                dropdownIndicator: () => "bg-green-400",
-                group(props) {
-                  return "bg-red-500";
-                },
-                menuPortal: () => "bg-red-500",
-                option: () => "text-red-500",
-                singleValue(props) {
-                  return "text-green-500";
-                },
-                placeholder: () => "text-green-500",
-                multiValueLabel: () => "text-red-500",multiValue:()=>'text-red-500 bg-black',indicatorSeparator:()=>'text-green-400'
-              }}
+              styles={{ control: base => ({
+                ...base,
+                border: 1,
+                // This line disable the blue border
+                boxShadow: 'none',
+                borderRadius:'5px',
+                
+               
+              })}}
+              className="text-black focus:outline-none  shadow-xl rounded border border-gray-400 dark:border-gray-400 focus:border-gray-400"
+              id={row.id}
+              defaultValue={option}
+              onChange={handle}
+              options={options}
             />
           </div>
         </>
@@ -123,6 +93,9 @@ export const columnsExpand = [
   }),
   columnHelper.accessor("description", {
     header: "Description",
+    cell: ({ getValue, row: { index }, column: { id }, table }) => {
+      return <div className="text-start">{getValue()}</div>
+    },
     enableColumnFilter: false,
     footer: (info) => info.column.id,
   }),
@@ -208,7 +181,7 @@ export const columnsExpand = [
           onChange={(e) => setValue(+e.target.value)}
           onBlur={onBlur}
           type="number"
-          className=" text-end  rounded-md  dark:text-white border   border-green-500 focus:outline-none focus:border-red-500 p-1"
+          className=" text-end    dark:text-white border  border-gray-300  focus:outline-none focus:border-red-500 p-1 rounded dark:bg-slate-600"
           style={{ maxWidth: "70px" }}
         />
       );

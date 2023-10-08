@@ -28,18 +28,20 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   useTable: TableType<any>;
+  supData :any
 }
 
 const ExpandDataTable = <TData, TValue>({
   columns,
   data,
   useTable,
+  supData
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
   return (
-    <div className=" ">
-      <Table className="">
-        <TableHeader className="m-10">
+    <div className="bg-white dark:bg-slate-800  rounded-2xl shadow-xl">
+      <Table className=" rounded-lg dark:text-black h-fit" >
+        <TableHeader className="m-10  shadow-2xl rounded-lg  ">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -47,7 +49,7 @@ const ExpandDataTable = <TData, TValue>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="text-center text-xs border px-2 py-2 border-gray-400"
+                    className="text-center text-xs border px-2 py-2   text-black font-semibold dark:bg-[#2E3B42] dark:text-white   "
                   >
                     {header.isPlaceholder ? null : (
                       <>
@@ -88,15 +90,15 @@ const ExpandDataTable = <TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody className="border border-gray-400">
+        <TableBody className="border  font-semibold">
           {table.getRowModel().rows?.length > 0 ? (
             table.getRowModel().rows.map((row) => (
               <Fragment key={row.id}>
-                <TableRow key={row.id} className="border border-gray-400">
+                <TableRow key={row.id} className="border dark:bg-white border-b-2 border-b-gray-300">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className="text-center text-xs  px-2 py-2"
+                      className="h-24 text-center"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -112,7 +114,7 @@ const ExpandDataTable = <TData, TValue>({
               <TableCell colSpan={columns.length} className="h-24">
                 <div className=" flex justify-center items-center p-3">
                 <RotatingLines
-                  strokeColor="green"
+                  strokeColor="blue"
                   strokeWidth="5"
                   animationDuration="0.75"
                   width="96"
