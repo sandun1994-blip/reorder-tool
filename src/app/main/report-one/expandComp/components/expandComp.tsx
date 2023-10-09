@@ -17,22 +17,10 @@ import {
   RowData,
   TableOptions,
   VisibilityState,
-  ColumnResizeMode,
 } from "@tanstack/react-table";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
-import { columns } from "./components/columnsReorder";
 import axios from "axios";
-import SelectComp from "./components/SelectComp";
-import {
-  getCombineCode,
-  getLocations,
-  getStockOrder,
-  getSupplier,
-  isCreateWorkOrder,
-} from "./lib/lib";
-
-import ReorderDataTable from "./components/data-table";
-
+import { Input } from "@/components/ui/input";
 
 import {
   DropdownMenu,
@@ -49,11 +37,10 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { downloadToExcel } from "./lib/xlsx";
 import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
-import WarehouseComp from "./components/warehouseComp";
 import { toast } from "react-toastify";
+import { Puff, Watch } from "react-loader-spinner";
 import {
   Select,
   SelectContent,
@@ -63,34 +50,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { refreshAll, sendOrder, sendTransfers, sendWorkOrder } from "./lib/sendHooks";
-import SnoozeItems from "./components/snoozeItems";
-import { useRouter } from "next/navigation";
-import { FcSearch } from "react-icons/fc";
-import "../reorder-tool/index.css";
-import { ImFolderDownload } from "react-icons/im";
-import { BsExclude, BsFillPauseBtnFill, BsFillSendFill } from "react-icons/bs";
-import { BiSolidReport } from "react-icons/bi";
-import { IoIosListBox, IoMdRefreshCircle, IoMdResize } from "react-icons/io";
-import { Card, CardContent } from "@/components/ui/card";
+import { columnsExpand } from "./columnExpand";
+import { getLocations, getStockOrder, getStockOrderTwo, getSupplier } from "../../lib/lib";
+import { downloadToExcel } from "../../lib/xlsx";
+import ExpandDataTable from "./expandTable";
 import { IoSearchCircle } from "react-icons/io5";
-import { Checkbox } from "@/components/ui/checkbox";
+import SelectComp from "../../components/SelectComp";
+import { ImFolderDownload } from "react-icons/im";
+import { sendOrder, sendTransfers, sendWorkOrder } from "../../lib/sendHooks";
+import { BsFillSendFill } from "react-icons/bs";
+import { IoMdRefreshCircle } from "react-icons/io";
 
-declare module "@tanstack/table-core" {
-  interface TableMeta<TData extends RowData> {
-    editedRows: any | null;
-    updateData: (rowIndex: any, columnId: any, value: any) => void;
-    setEditedRows: any;
-    addRow: any;
-    setwareHouseData: any;
-    setChartModal: React.Dispatch<React.SetStateAction<boolean>>;
-    updateSelectValue: (rowIndex: any, columnId: any, value: any) => void;
-    removeRow: (rowIndex: any, columnId: any) => void;
-    setSnoozeRemoveData: any;
-  }
-}
 
-type Props = {};
+
+type Props = {
+    supData:any 
+    mainDataItem:any
+};
 
 function useSkipper() {
   const shouldSkipRef = React.useRef(true);
@@ -108,8 +84,11 @@ function useSkipper() {
   return [shouldSkip, skip] as const;
 }
 
-const ReorderTool = (props: Props) => {
-  const router = useRouter();
+const ExpandComp = ({ supData,mainDataItem}: Props) => {
+
+
+
+
 
   const globalFns: FilterFn<any> = (
     row,
@@ -134,10 +113,8 @@ const ReorderTool = (props: Props) => {
       );
     }
   };
-  const [originalData, setOriginalData] = useState<any[]>([]);
+
   const [data, setData] = useState<any[]>([]);
-  const [loading,setLoading]=useState(false)
-  const [supplierData, setSupplierData] = useState([]);
   const [autoResetPageIndex, skipAutoResetPageIndex] = useSkipper();
   const [arrayOfLocations, setArrayOfLocations] = useState<string[]>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -152,20 +129,15 @@ const ReorderTool = (props: Props) => {
   const [wareHouseData, setwareHouseData] = useState({});
   const [chartModal, setChartModal] = useState(false);
   const [sending, setSending] = useState(false);
-  const [pauseItems, setPauseItems] = useState([]);
-  const [snoozeVisible, setSnoozeVisible] = useState(false);
   const [soonzeRemoveData, setSnoozeRemoveData] = useState([]);
-  const [columnResizeMode, setColumnResizeMode] =
-    React.useState<ColumnResizeMode>("onChange");
-  const [resizeMode, setResizemode] = useState(false);
-  const [checkWoCurrent,setCheckWoCurrent]=useState(false)
+
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
     [arrayOfLocations]
   );
 
-  const columnDef = useMemo(() => {
-    return columns;
+  const columnDef:any = useMemo(() => {
+    return columnsExpand;
   }, []);
 
   useEffect(() => {
@@ -173,9 +145,8 @@ const ReorderTool = (props: Props) => {
   }, [searchValue]);
 
   useEffect(() => {
-    const getData = async (supData: any, snoozeItem: any) => {
-     
-      const url = "/api/stktool";
+    const getData = async () => {
+      const url = "/api/billomatlines/" + mainDataItem.stockCode ;
       const config = {
         method: "get",
         url,
@@ -185,80 +156,51 @@ const ReorderTool = (props: Props) => {
       };
       try {
         const res = await axios(config);
+       // console.log(res.data);
+        
         const reduceSupData = supData.map((item: any) => ({
           value: item.value,
           label: item.label,
         }));
-        const pauseItems = getCombineCode(snoozeItem);
-        const stkData = getStockOrder(res.data, reduceSupData, pauseItems);
-
-        setData(stkData.filter(data=>data.workOrder));
-        setSupplierData(supData);
-        setArrayOfLocations(getLocations(res.data));
-        setPauseItems(snoozeItem);
-        setOriginalData(stkData)
+        
+        
+        const stkData = getStockOrderTwo(res.data, reduceSupData,mainDataItem);
+        console.log(stkData);
+        setData(stkData);
       } catch (error) {
         console.log(error);
       }
     };
 
-    const getSupplierData = async () => {
-      const url = "/api/supplieraccount";
-      const config = {
-        method: "get",
-        url,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-      try {
-        const res = await axios(config);
-        const supData = getSupplier(res.data);
-
-        return supData;
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    const getPauseItems = async () => {
-      const url = "/api/reordertool/pauseItem";
-      const config = {
-        method: "get",
-        url,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-      try {
-        const res = await axios(config);
-
-        return res.data;
-      } catch (error) {
-        console.log(error);
-      }
-    };
+    ;
 
     const getAllData = async () => {
-      setLoading(true)
       try {
-        const pauseItems = await getPauseItems();
-        const supData = await getSupplierData();
-        const allData = await getData(supData, pauseItems);
-        setLoading(false)
+        
+         await getData();
+        
+        
       } catch (error) {
         console.log(error);
-        setLoading(false)
       }
     };
 
     getAllData();
-  }, []);
+  }, [mainDataItem.calcReOrd]);
+
+
+
+
+
+
+
+
+
+
 
   const table = useReactTable({
     data,
     columns: columnDef,
-    columnResizeMode,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -275,7 +217,7 @@ const ReorderTool = (props: Props) => {
       columnFilters,
       columnVisibility,
     },
-    enableRowSelection: true,
+    enableRowSelection: true, //enable row selection for all rows
     // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
     onRowSelectionChange: setRowSelection,
     getRowCanExpand: () => true,
@@ -290,25 +232,19 @@ const ReorderTool = (props: Props) => {
     globalFilterFn: globalFns,
     meta: {
       editedRows,
-      setSnoozeRemoveData,
       setEditedRows,
+      setSnoozeRemoveData,
       updateData: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
+        console.log(rowIndex, columnId, value);
+        
         skipAutoResetPageIndex();
-        setData((old:any) =>
-          old.map((row:any, index:any) => {
+        setData((old) =>
+          old.map((row, index) => {
             if (index === rowIndex) {
-              if (old[rowIndex]?.billomatHdr) {
-                return {
-                  ...old[rowIndex],
-                  [columnId]: value,
-                  isCreateWorkOrder:isCreateWorkOrder({...old[rowIndex],calcReOrd:value})
-                };
-                
-              }
               return {
                 ...old[rowIndex],
-                [columnId]: value,
+                [columnId]: value
               };
             }
             return row;
@@ -318,7 +254,7 @@ const ReorderTool = (props: Props) => {
       updateSelectValue: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
-
+        
         setData((old) =>
           old.map((row, index) => {
             if (index === rowIndex) {
@@ -332,12 +268,7 @@ const ReorderTool = (props: Props) => {
           })
         );
       },
-      removeRow: (rowIndex, columnId) => {
-        skipAutoResetPageIndex();
-        setData((old) => old.filter((row, index) => index != rowIndex));
-
-        table.resetRowSelection();
-      },
+      removeRow:()=>{},
       addRow: () => {
         const newRow: any = {
           studentId: Math.floor(Math.random() * 10000),
@@ -354,62 +285,34 @@ const ReorderTool = (props: Props) => {
     },
   });
 
+
   useEffect(() => {
     const locations = options.map((loc) => loc.value);
     const locationsTwo = optionsTwo.map((loc) => loc.value);
 
     if (locations.length > 0 || locationsTwo.length > 0) {
+     
+
       setGlobalFilter(
         JSON.stringify([...locations, ...locationsTwo, searchValue])
       );
     } else {
       setGlobalFilter("");
     }
+
+    // table.getFilteredRowModel()
+    //  console.log(table.getFilteredRowModel());
   }, [options, optionsTwo]);
 
+ 
 
+ 
 
-const shoCurrentWo=(val:boolean)=>{
-  table.resetRowSelection();
-  if(val){
-    setData(originalData.filter(data=>!data.workOrder))
-    }else{
-      setData(originalData.filter(data=>data.workOrder))
-    }
-    setCheckWoCurrent(val)
-    
-}
-
-
-
-
-
-
-
-
-
-
-  const chartData = useMemo(() => {
-    return wareHouseData;
-  }, []);
-
-  console.log(table.getFilteredSelectedRowModel().rows);
   return (
-    <div className="pr-5 pl-5 py-5 shadow-2xl  h-full ml-5 rounded-md">
-      <>
-    
-      {  snoozeVisible &&<SnoozeItems
-          setSnoozeVisible={setSnoozeVisible}
-          snoozeVisible={snoozeVisible}
-          setSnoozeRemoveData={setSnoozeRemoveData}
-        />}
-      {  chartModal && <WarehouseComp
-          chartModal={chartModal}
-          setChartModal={setChartModal}
-          details={wareHouseData}
-        />}
-      </>
-
+    <div className="pr-8 pl-8 py-5 shadow-2xl rounded-md dark:bg-white">
+      
+       
+        
       <div className="mx-3 ">
         <div
           className=" flex justify-between items-center pt-4
@@ -440,37 +343,25 @@ const shoCurrentWo=(val:boolean)=>{
             </div>
           </div>
 
-          <div className="z-50 hidden md:flex">
+          {/* <div className="z-50 hidden md:flex">
             {" "}
             <SelectComp
-              id={"loc-filter"}
+              id={"loc-filter-2"}
               options={options}
               setOptions={setOptions}
               optionArray={optionsArray}
               setGlobalFilter={setGlobalFilter}
             />
-          </div>
+          </div> */}
 
-          <div className="z-50 hidden md:flex items-center">
-          <Checkbox
-          className="mr-2 rounded transform hover:scale-105 transition-transform w-5 h-5"
-          checked={checkWoCurrent}
-          onCheckedChange={(value)=>shoCurrentWo(!!value)}
-        />
-         <label
-        htmlFor="terms"
-        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-      >
-        SHOW CURRENT WO
-      </label>
-          </div>
+          <div></div>
 
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="ml-auto border-gray-400 dark:bg-[#2E3B42] rounded transform hover:scale-105 transition-transform"
+                  className="ml-auto border-gray-400 dark:bg-[#2E3B42] rounded transform hover:scale-105 transition-transform dark:text-white"
                   disabled={sending}
                 >
                   Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
@@ -511,7 +402,7 @@ const shoCurrentWo=(val:boolean)=>{
                   variant="outline"
                   disabled={sending}
                   className="shadow-lg dark:bg-[#2E3B42] rounded border-gray-400
-                  transform hover:scale-110 transition-transform"
+                  transform hover:scale-110 transition-transform dark:text-white"
                 >
                   Actions
                 </Button>
@@ -538,7 +429,7 @@ const shoCurrentWo=(val:boolean)=>{
                     <Button
                       variant={"outline"}
                       onClick={() => {
-                        sendOrder(table, toast, setSending, supplierData);
+                        sendOrder(table, toast, setSending, supData);
                       }}
                       className="rounded-lg w-40 text-left border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
@@ -552,7 +443,7 @@ const shoCurrentWo=(val:boolean)=>{
                     <Button
                       variant={"outline"}
                       onClick={() => {
-                        sendTransfers(table, toast, setSending, supplierData);
+                        sendTransfers(table, toast, setSending, supData);
                       }}
                       className="rounded-lg w-40 text-left border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
@@ -562,84 +453,18 @@ const shoCurrentWo=(val:boolean)=>{
                       <BsFillSendFill size={25} />
                     </DropdownMenuShortcut>
                   </DropdownMenuItem>
+                 
+                  
                   <DropdownMenuItem>
-                    <Button
-                      variant={"outline"}
-                      onClick={() => {
-                        sendWorkOrder(table, toast, setSending, supplierData);
-                      }}
-                      className="rounded-lg w-40 text-left border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
-                    >
-                      Work Order
-                    </Button>
-                    <DropdownMenuShortcut>
-                      <BsFillSendFill size={25} />
-                    </DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Button
-                      variant={"outline"}
-                      onClick={() => {
-                        setSnoozeVisible(true);
-                      }}
-                      className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
-                    >
-                      Snoozed Items
-                    </Button>
-                    <DropdownMenuShortcut>
-                      <BsFillPauseBtnFill size={25} />
-                    </DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                  {/* <DropdownMenuItem>
                     <Button
                       variant={"outline"}
                       onClick={() => {}}
-                      className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
-                    >
-                      Exclude Items
-                    </Button>
-                    <DropdownMenuShortcut>
-                      <BsExclude size={25} />
-                    </DropdownMenuShortcut>
-                  </DropdownMenuItem> */}
-                  <DropdownMenuItem>
-                    <Button
-                      variant={"outline"}
-                      onClick={() => {router.push('report-one')}}
-                      className="rounded-lg w-40 border-gray-300 0 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
-                    >
-                      Report One
-                    </Button>
-                    <DropdownMenuShortcut>
-                      <BiSolidReport size={25} />
-                    </DropdownMenuShortcut>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem>
-                    <Button
-                      variant={"outline"}
-                      onClick={() => {refreshAll(toast, setSending)}}
                       className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Refresh
                     </Button>
                     <DropdownMenuShortcut>
                       <IoMdRefreshCircle size={25} />
-                    </DropdownMenuShortcut>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem>
-                    <Button
-                      variant={"outline"}
-                      onClick={() => {
-                        setResizemode((pre) => !pre);
-                      }}
-                      className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
-                    >
-                      Resize Mode
-                    </Button>
-                    <DropdownMenuShortcut>
-                      <IoMdResize size={25} />
                     </DropdownMenuShortcut>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
@@ -649,15 +474,11 @@ const shoCurrentWo=(val:boolean)=>{
           </div>
         </div>
       </div>
+       
+        
       <div className=" p-3 shadow-2xl  overflow-x-auto ">
-        <ReorderDataTable
-          useTable={table}
-          supData={supplierData}
-          columns={columnDef}
-          columnResizeMode={columnResizeMode}
-          resizeMode={resizeMode}
-          loading={loading}
-        />
+        <ExpandDataTable 
+        useTable={table} data={data} columns={columnsExpand}  supData={supData} />
       </div>
 
       <div className="h-4" />
@@ -793,7 +614,7 @@ const shoCurrentWo=(val:boolean)=>{
         </div>
       </nav>
 
-      <div className="flex-1 text-sm  text-blue-900 font-bold dark:text-blue-600" style={{color:'blue'}}>
+      <div className="flex-1 text-sm  text-blue-600 font-bold dark:text-blue-600">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected
       </div>
@@ -801,4 +622,4 @@ const shoCurrentWo=(val:boolean)=>{
   );
 };
 
-export default ReorderTool;
+export default ExpandComp;

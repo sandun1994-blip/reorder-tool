@@ -16,6 +16,9 @@ import {
 } from "@tanstack/react-table";
 import React, {
   Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
   useState,
 } from "react";
 import { MdFilterList, MdFilterListOff } from "react-icons/md";
@@ -151,13 +154,13 @@ const ReorderDataTable = <TData, TValue>({
             <TableRow>
                <TableCell colSpan={columns.length} className="h-24">
                 <div className=" flex justify-center items-center p-3">
-                {loading? (<RotatingLines
+               {loading? (<RotatingLines
                   strokeColor="blue"
                   strokeWidth="5"
                   animationDuration="0.75"
                   width="96"
                   visible={loading}
-                />):(<h6>NO DATA ...........</h6>)}
+                />):(<h6>NO DATA.........</h6>)}
                 </div>
                
               </TableCell>

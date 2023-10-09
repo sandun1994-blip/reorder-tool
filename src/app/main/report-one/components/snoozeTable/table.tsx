@@ -16,37 +16,27 @@ import {
 } from "@tanstack/react-table";
 import React, {
   Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
   useState,
 } from "react";
 import { MdFilterList, MdFilterListOff } from "react-icons/md";
-import ExpandComp from "../expandComp/components/expandComp";
 import { RotatingLines } from "react-loader-spinner";
 
 interface DataTableProps<TData, TValue> {
-  useTable: TableType<any>;
-  supData :any
   columns: ColumnDef<TData, TValue>[];
-  columnResizeMode:any
-  resizeMode:boolean
-  loading:boolean
-  
+  useTable: TableType<any>;
 }
 
-const ReorderDataTable = <TData, TValue>({
-  supData,
-  useTable,
-  columnResizeMode,
+const SnozzeDataTable = <TData, TValue>({
   columns,
-  resizeMode,
-  loading
+  useTable,
 }: DataTableProps<TData, TValue>) => {
   const table = useTable;
   return (
-    <div className="bg-white dark:bg-slate-800  rounded-2xl shadow-xl">
-      <Table className=" rounded-lg dark:text-black h-fit" 
-            style= {{ width: resizeMode?table.getCenterTotalSize():'',
-            }}
-          >
+    <div className="shadow-2xl ">
+      <Table className=" rounded-lg dark:text-black h-fit">
         <TableHeader className="m-10  shadow-2xl rounded-lg  ">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -56,9 +46,6 @@ const ReorderDataTable = <TData, TValue>({
                     key={header.id}
                     colSpan={header.colSpan}
                     className="text-center text-xs border px-2 py-2   text-black font-semibold dark:bg-[#2E3B42] dark:text-white   "
-                    style={{
-                      width: header.getSize(),
-                    }}
                   >
                     {header.isPlaceholder ? null : (
                       <>
@@ -74,24 +61,6 @@ const ReorderDataTable = <TData, TValue>({
                             header.column.columnDef.header,
                             header.getContext()
                           )}
-                           <div
-                      {...{
-                        onMouseDown: header.getResizeHandler(),
-                        onTouchStart: header.getResizeHandler(),
-                        className: `resizer ${
-                          header.column.getIsResizing() ? 'isResizing' : ''
-                        }`,
-                        style: {
-                          transform:
-                            columnResizeMode === 'onEnd' &&
-                            header.column.getIsResizing()
-                              ? `translateX(${
-                                  table.getState().columnSizingInfo.deltaOffset
-                                }px)`
-                              : '',
-                        },
-                      }}
-                    />
                           {{
                             asc: "🔼",
                             desc: " 🔽",
@@ -134,43 +103,31 @@ const ReorderDataTable = <TData, TValue>({
                     </TableCell>
                   ))}
                 </TableRow>
-                {row.getIsExpanded() && (
-                  <TableRow className="border dark:bg-white">
-                    {/* 2nd row is a custom 1 cell row */}
-                    <TableCell
-                      colSpan={row.getVisibleCells().length}
-                      className="h-24 text-center "
-                    >
-                      <ExpandComp supData={supData} mainDataItem={row.original}/>
-                    </TableCell>
-                  </TableRow>
-                )}
               </Fragment>
             ))
           ) : (
-            <TableRow>
-               <TableCell colSpan={columns.length} className="h-24">
+            <TableRow >
+              <TableCell colSpan={columns.length} className="">
                 <div className=" flex justify-center items-center p-3">
-                {loading? (<RotatingLines
+                <RotatingLines
                   strokeColor="blue"
                   strokeWidth="5"
                   animationDuration="0.75"
-                  width="96"
-                  visible={loading}
-                />):(<h6>NO DATA ...........</h6>)}
+                  width="75"
+                  visible={true}
+                />
                 </div>
                
               </TableCell>
             </TableRow>
           )}
         </TableBody>
-        
       </Table>
     </div>
   );
 };
 
-export default ReorderDataTable;
+export default SnozzeDataTable;
 
 function FilterVisible({
   column,
@@ -183,7 +140,7 @@ function FilterVisible({
   const toggleChange = () => {
     setVisible((pre) => {
       if (pre === false) {
-        column.setFilterValue('');
+        column.setFilterValue("");
       }
       return !pre;
     });

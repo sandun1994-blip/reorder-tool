@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     );
 
     const body = await request.json();
-    console.log('pause',user);
+
     const config = {
       method: "POST",
       url: process.env.BASE_URL + "reodertool/addpauseitem",

@@ -33,7 +33,6 @@ import {
 
 import ReorderDataTable from "./components/data-table";
 
-
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -63,7 +62,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { refreshAll, sendOrder, sendTransfers, sendWorkOrder } from "./lib/sendHooks";
+import {
+  refreshAll,
+  sendOrder,
+  sendTransfers,
+  sendWorkOrder,
+} from "./lib/sendHooks";
 import SnoozeItems from "./components/snoozeItems";
 import { useRouter } from "next/navigation";
 import { FcSearch } from "react-icons/fc";
@@ -135,8 +139,8 @@ const ReorderTool = (props: Props) => {
     }
   };
   const [originalData, setOriginalData] = useState<any[]>([]);
-  const [data, setData] = useState<any[]>([]);
   const [loading,setLoading]=useState(false)
+  const [data, setData] = useState<any[]>([]);
   const [supplierData, setSupplierData] = useState([]);
   const [autoResetPageIndex, skipAutoResetPageIndex] = useSkipper();
   const [arrayOfLocations, setArrayOfLocations] = useState<string[]>([]);
@@ -158,7 +162,7 @@ const ReorderTool = (props: Props) => {
   const [columnResizeMode, setColumnResizeMode] =
     React.useState<ColumnResizeMode>("onChange");
   const [resizeMode, setResizemode] = useState(false);
-  const [checkWoCurrent,setCheckWoCurrent]=useState(false)
+  const [checkWoCurrent, setCheckWoCurrent] = useState(false);
   const optionsArray = useMemo(
     () => arrayOfLocations.map((val) => ({ value: val, label: val })),
     [arrayOfLocations]
@@ -174,7 +178,6 @@ const ReorderTool = (props: Props) => {
 
   useEffect(() => {
     const getData = async (supData: any, snoozeItem: any) => {
-     
       const url = "/api/stktool";
       const config = {
         method: "get",
@@ -192,11 +195,28 @@ const ReorderTool = (props: Props) => {
         const pauseItems = getCombineCode(snoozeItem);
         const stkData = getStockOrder(res.data, reduceSupData, pauseItems);
 
-        setData(stkData.filter(data=>data.workOrder));
+        setData(
+          stkData.filter(
+            (data) =>
+              data.workOrder &&
+              data.maxStock >
+                data.inStockQTY + data?.incommingty - data.salesOrdQTY &&
+              data.minStock <
+                data.inStockQTY + data?.incommingty - data.salesOrdQTY
+          )
+        );
         setSupplierData(supData);
         setArrayOfLocations(getLocations(res.data));
         setPauseItems(snoozeItem);
-        setOriginalData(stkData)
+        setOriginalData(
+          stkData.filter(
+            (data) =>
+              data.maxStock >
+                data.inStockQTY + data?.incommingty - data.salesOrdQTY &&
+              data.minStock <
+                data.inStockQTY + data?.incommingty - data.salesOrdQTY
+          )
+        );
       } catch (error) {
         console.log(error);
       }
@@ -295,16 +315,18 @@ const ReorderTool = (props: Props) => {
       updateData: (rowIndex, columnId, value) => {
         // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
-        setData((old:any) =>
-          old.map((row:any, index:any) => {
+        setData((old: any) =>
+          old.map((row: any, index: any) => {
             if (index === rowIndex) {
               if (old[rowIndex]?.billomatHdr) {
                 return {
                   ...old[rowIndex],
                   [columnId]: value,
-                  isCreateWorkOrder:isCreateWorkOrder({...old[rowIndex],calcReOrd:value})
+                  isCreateWorkOrder: isCreateWorkOrder({
+                    ...old[rowIndex],
+                    calcReOrd: value,
+                  }),
                 };
-                
               }
               return {
                 ...old[rowIndex],
@@ -367,27 +389,15 @@ const ReorderTool = (props: Props) => {
     }
   }, [options, optionsTwo]);
 
-
-
-const shoCurrentWo=(val:boolean)=>{
-  table.resetRowSelection();
-  if(val){
-    setData(originalData.filter(data=>!data.workOrder))
-    }else{
-      setData(originalData.filter(data=>data.workOrder))
+  const shoCurrentWo = (val: boolean) => {
+    table.resetRowSelection();
+    if (val) {
+      setData(originalData.filter((data) => !data.workOrder));
+    } else {
+      setData(originalData.filter((data) => data.workOrder));
     }
-    setCheckWoCurrent(val)
-    
-}
-
-
-
-
-
-
-
-
-
+    setCheckWoCurrent(val);
+  };
 
   const chartData = useMemo(() => {
     return wareHouseData;
@@ -397,17 +407,20 @@ const shoCurrentWo=(val:boolean)=>{
   return (
     <div className="pr-5 pl-5 py-5 shadow-2xl  h-full ml-5 rounded-md">
       <>
-    
-      {  snoozeVisible &&<SnoozeItems
-          setSnoozeVisible={setSnoozeVisible}
-          snoozeVisible={snoozeVisible}
-          setSnoozeRemoveData={setSnoozeRemoveData}
-        />}
-      {  chartModal && <WarehouseComp
-          chartModal={chartModal}
-          setChartModal={setChartModal}
-          details={wareHouseData}
-        />}
+        {snoozeVisible && (
+          <SnoozeItems
+            setSnoozeVisible={setSnoozeVisible}
+            snoozeVisible={snoozeVisible}
+            setSnoozeRemoveData={setSnoozeRemoveData}
+          />
+        )}
+        {chartModal && (
+          <WarehouseComp
+            chartModal={chartModal}
+            setChartModal={setChartModal}
+            details={wareHouseData}
+          />
+        )}
       </>
 
       <div className="mx-3 ">
@@ -452,17 +465,17 @@ const shoCurrentWo=(val:boolean)=>{
           </div>
 
           <div className="z-50 hidden md:flex items-center">
-          <Checkbox
-          className="mr-2 rounded transform hover:scale-105 transition-transform w-5 h-5"
-          checked={checkWoCurrent}
-          onCheckedChange={(value)=>shoCurrentWo(!!value)}
-        />
-         <label
-        htmlFor="terms"
-        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-      >
-        SHOW CURRENT WO
-      </label>
+            <Checkbox
+              className="mr-2 rounded transform hover:scale-105 transition-transform w-5 h-5"
+              checked={checkWoCurrent}
+              onCheckedChange={(value) => shoCurrentWo(!!value)}
+            />
+            <label
+              htmlFor="terms"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              SHOW CURRENT WO
+            </label>
           </div>
 
           <div>
@@ -605,10 +618,12 @@ const shoCurrentWo=(val:boolean)=>{
                   <DropdownMenuItem>
                     <Button
                       variant={"outline"}
-                      onClick={() => {router.push('report-one')}}
+                      onClick={() => {
+                        router.push("reorder-tool");
+                      }}
                       className="rounded-lg w-40 border-gray-300 0 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
-                      Report One
+                      RO-Tool
                     </Button>
                     <DropdownMenuShortcut>
                       <BiSolidReport size={25} />
@@ -618,7 +633,9 @@ const shoCurrentWo=(val:boolean)=>{
                   <DropdownMenuItem>
                     <Button
                       variant={"outline"}
-                      onClick={() => {refreshAll(toast, setSending)}}
+                      onClick={() => {
+                        refreshAll(toast, setSending);
+                      }}
                       className="rounded-lg w-40 border-gray-300  hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transform hover:scale-105 transition-transform"
                     >
                       Refresh
@@ -793,7 +810,10 @@ const shoCurrentWo=(val:boolean)=>{
         </div>
       </nav>
 
-      <div className="flex-1 text-sm  text-blue-900 font-bold dark:text-blue-600" style={{color:'blue'}}>
+      <div
+        className="flex-1 text-sm  text-blue-900 font-bold dark:text-blue-600"
+        style={{ color: "blue" }}
+      >
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected
       </div>
